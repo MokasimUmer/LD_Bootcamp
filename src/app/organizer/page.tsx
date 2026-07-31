@@ -1147,27 +1147,6 @@ export default function OrganizerPortal() {
                 )}
               </CardContent>
             </Card>
-<<<<<<< HEAD
-=======
-=======
-                    type="button"
-                    onClick={() => handleToggleQuizUnlock(dNum, !isUnlocked)}
-                    className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                      isUnlocked
-                        ? "bg-afr-emerald text-white shadow-glow-emerald"
-                        : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
-                    }`}
-                  >
-                    {isUnlocked ? <Unlock className="w-4 h-4 flex-shrink-0" /> : <Lock className="w-4 h-4 flex-shrink-0" />}
-                    <span className="hidden sm:inline">Day {dNum}</span>
-                    <span className="sm:hidden">D{dNum}</span>
-                    <span className="hidden md:inline">{isUnlocked ? "✓" : "Locked"}</span>
-                  </button>
-                );
-              })}
-            </div>
->>>>>>> e34294460a7f9bdf1cd3c4cff0ab9f605f5a056b
->>>>>>> d8b931bc76914afd46c0ee347fb427eb058fa87f
           </div>
         </div>
       )}
