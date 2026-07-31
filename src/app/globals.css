@@ -3,134 +3,96 @@
 @tailwind utilities;
 
 :root {
-  --bg-main: #0B0E14;
-  --bg-card: #121721;
-  --bg-border: #1E293B;
-  
-  --afr-amber: #F7931A;
-  --afr-amber-glow: rgba(247, 147, 26, 0.4);
-  
-  --afr-terracotta: #C84B31;
-  --afr-terracotta-glow: rgba(200, 75, 49, 0.4);
+  --bg-main:   #080A0F;
+  --bg-card:   #0D1117;
+  --bg-border: #1A2236;
 
-  --afr-emerald: #10B981;
-  --afr-emerald-glow: rgba(16, 185, 129, 0.4);
-  
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
+  /* ── Golden primary ── */
+  --gold:       #F5C842;
+  --gold-dark:  #D4A017;
+  --gold-light: #FFE082;
+  --gold-glow:  rgba(245, 200, 66, 0.35);
+
+  /* ── Emerald success ── */
+  --emerald:    #10B981;
+
+  /* ── Navy accent (leaderboard) ── */
+  --navy:       #0A1628;
+  --navy-mid:   #0F2040;
+  --navy-light: #162B55;
 }
 
 body {
   background-color: var(--bg-main);
-  color: var(--text-main);
+  color: #F1F5F9;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
 }
 
-/* Glassmorphism Design Tokens */
-.afr-glass {
-  background: rgba(18, 23, 33, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ── Shared glass surface ── */
+.glass {
+  background: rgba(13, 17, 23, 0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 200, 66, 0.08);
 }
 
-.afr-glass-amber {
-  background: rgba(247, 147, 26, 0.06);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(247, 147, 26, 0.25);
+/* ── Standard card ── */
+.card {
+  background: #0D1117;
+  border: 1px solid #1A2236;
+  border-radius: 1rem;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.card:hover {
+  border-color: rgba(245, 200, 66, 0.30);
+  box-shadow: 0 8px 32px -8px rgba(245, 200, 66, 0.12);
 }
 
-.afr-glass-terracotta {
-  background: rgba(200, 75, 49, 0.06);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(200, 75, 49, 0.25);
+/* ── QR badge card (developer) ── distinct deep-bronze ── */
+.card-qr {
+  background: linear-gradient(135deg, #1A1000 0%, #2A1A00 50%, #1A1000 100%);
+  border: 1px solid rgba(245, 200, 66, 0.40);
+  border-radius: 1rem;
+  box-shadow: 0 0 40px -10px rgba(245, 200, 66, 0.25);
 }
 
-.afr-glass-emerald {
-  background: rgba(16, 185, 129, 0.06);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+/* ── QR scanner card (organizer) ── distinct copper/bronze ── */
+.card-scanner {
+  background: linear-gradient(135deg, #1A0A00 0%, #2A1400 60%, #1A0A00 100%);
+  border: 1px solid rgba(220, 140, 40, 0.40);
+  border-radius: 1rem;
+  box-shadow: 0 0 40px -10px rgba(220, 140, 40, 0.20);
 }
 
-/* Glowing Border Hover Effects */
-.afr-glow-border {
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* ── Leaderboard card ── deep navy blue ── */
+.card-leaderboard {
+  background: linear-gradient(135deg, #030D1E 0%, #0A1628 60%, #030D1E 100%);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 1rem;
+  box-shadow: 0 0 40px -10px rgba(59, 130, 246, 0.20);
 }
 
-.afr-glow-border:hover {
-  border-color: rgba(247, 147, 26, 0.6);
-  box-shadow: 0 0 20px -3px rgba(247, 147, 26, 0.35);
-}
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #080A0F; }
+::-webkit-scrollbar-thumb { background: #1A2236; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #F5C842; }
 
-/* Glowing Card Variants */
-.afr-card {
-  background: #121721;
-  border: 1px solid #1E293B;
-  border-radius: 0.75rem;
-  transition: all 0.25s ease-in-out;
-}
+/* ── Legacy class aliases (still used in JSX) ── */
+.afr-glass         { background: rgba(13,17,23,0.80); backdrop-filter: blur(20px); border: 1px solid rgba(245,200,66,0.08); }
+.afr-glass-amber   { background: rgba(245,200,66,0.07); border: 1px solid rgba(245,200,66,0.25); border-radius: 0.75rem; }
+.afr-glass-terracotta { background: rgba(180,80,20,0.08); border: 1px solid rgba(220,140,40,0.25); border-radius: 0.75rem; }
+.afr-glass-emerald { background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.25); border-radius: 0.75rem; }
+.afr-card          { background: #0D1117; border: 1px solid #1A2236; border-radius: 1rem; transition: border-color 0.25s, box-shadow 0.25s; }
+.afr-card:hover    { border-color: rgba(245,200,66,0.30); box-shadow: 0 8px 32px -8px rgba(245,200,66,0.12); }
 
-.afr-card:hover {
-  border-color: rgba(247, 147, 26, 0.4);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(247, 147, 26, 0.2);
-}
-
-/* Glowing Button Variants */
-.btn-afr-amber {
-  background: linear-gradient(135deg, #F7931A 0%, #E58410 100%);
-  color: #0B0E14;
-  font-weight: 600;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 0 15px rgba(247, 147, 26, 0.3);
-}
-
-.btn-afr-amber:hover {
-  background: linear-gradient(135deg, #FFB84D 0%, #F7931A 100%);
-  box-shadow: 0 0 25px rgba(247, 147, 26, 0.6);
-  transform: translateY(-1px);
-}
-
-.btn-afr-terracotta {
-  background: linear-gradient(135deg, #C84B31 0%, #9E321B 100%);
-  color: #F8FAFC;
-  font-weight: 600;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 0 15px rgba(200, 75, 49, 0.3);
-}
-
-.btn-afr-terracotta:hover {
-  background: linear-gradient(135deg, #D9534F 0%, #C84B31 100%);
-  box-shadow: 0 0 25px rgba(200, 75, 49, 0.6);
-  transform: translateY(-1px);
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0B0E14;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1E293B;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #F7931A;
-}
-
-/* Code Snippet / LNURL Key Typography */
-.afr-code {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  background: rgba(10, 14, 20, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.375rem;
-  padding: 0.2rem 0.5rem;
-  color: #FFB84D;
-}
+/* ── Glow shadows ── */
+.shadow-glow-gold      { box-shadow: 0 0 28px -4px rgba(245, 200,  66, 0.50); }
+.shadow-glow-amber     { box-shadow: 0 0 28px -4px rgba(245, 200,  66, 0.50); }
+.shadow-glow-amber-lg  { box-shadow: 0 0 50px  2px rgba(245, 200,  66, 0.55); }
+.shadow-glow-teal      { box-shadow: 0 0 28px -4px rgba(245, 200,  66, 0.50); }
+.shadow-glow-emerald   { box-shadow: 0 0 28px -4px rgba( 16, 185, 129, 0.45); }
+.shadow-glow-terracotta{ box-shadow: 0 0 28px -4px rgba(220, 140,  40, 0.40); }
+.shadow-glow-navy      { box-shadow: 0 0 28px -4px rgba( 59, 130, 246, 0.35); }
+.shadow-glow-red       { box-shadow: 0 0 28px -4px rgba(239,  68,  68, 0.45); }
