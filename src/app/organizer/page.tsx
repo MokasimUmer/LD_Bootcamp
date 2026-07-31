@@ -1177,70 +1177,7 @@ export default function OrganizerPortal() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* QR Scanner — distinct copper/bronze card */}
-          <div className="space-y-6">
-            <div className="card-scanner p-5">
-              <div className="flex items-center justify-between gap-2 mb-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
-                    <Camera className="w-5 h-5 text-amber-300" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-amber-100">QR Scanner</h3>
-                    <p className="text-xs text-amber-300/70">Day {scanDay} Check-In</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => setScanDay(d)}
-                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
-                        scanDay === d
-                          ? "bg-amber-400 text-slate-950 shadow-glow-terracotta"
-                          : "bg-amber-500/10 border border-amber-500/20 text-amber-300/60 hover:text-amber-200"
-                      }`}
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <Button
-                variant={scannerActive ? "outline" : "amber"}
-                size="md"
-                onClick={toggleScanner}
-                className={`w-full ${scannerActive ? "border-amber-500/40 text-amber-200" : "shadow-glow-gold"}`}
-              >
-                {scannerActive ? "Stop Camera Scanner" : "Activate PWA Camera Scanner"}
-              </Button>
-
-              <div id="qr-reader" className={`mt-4 w-full overflow-hidden rounded-lg border border-amber-500/20 bg-black/40 ${!scannerActive ? "hidden" : ""}`} />
-
-              {scanResult && (
-                <div className={`mt-4 p-4 rounded-lg text-sm space-y-2 border ${
-                  scanResult.type === "success"
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                    : "bg-red-500/10 border-red-500/30 text-red-300"
-                }`}>
-                  <div className="flex items-center space-x-2 font-bold">
-                    {scanResult.type === "success"
-                      ? <CheckCircle2 className="w-5 h-5" />
-                      : <AlertCircle className="w-5 h-5" />}
-                    <span>{scanResult.text}</span>
-                  </div>
-                  {scanResult.data && (
-                    <p className="text-xs opacity-70">
-                      Developer: {scanResult.data.developer?.name} · Day {scanResult.data.dayNumber}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-3 space-y-6">
             {/* Leaderboard — deep navy card */}
             <div className="card-leaderboard p-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
@@ -1504,6 +1441,135 @@ export default function OrganizerPortal() {
                     placeholder="Understand Payment Channels&#10;Set up LND node&#10;Verify invoice"
                     className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-amber focus:border-transparent"
                   />
+                </div>
+
+                {/* Media Attachments & Learning Resources Section */}
+                <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-mono font-bold text-slate-200 uppercase flex items-center space-x-1.5">
+                      <ExternalLink className="w-4 h-4 text-afr-amber" />
+                      <span>Media Attachments & Learning Resources ({currResources.length})</span>
+                    </h4>
+                    <span className="text-[10px] text-slate-400">Photos, Videos, Spec Links & Docs</span>
+                  </div>
+
+                  {/* List of Attached Resources */}
+                  {currResources.length > 0 && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {currResources.map((res, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 text-xs"
+                        >
+                          <div className="flex items-center space-x-2.5 overflow-hidden">
+                            <Badge
+                              variant={
+                                res.type === "IMAGE"
+                                  ? "amber"
+                                  : res.type === "VIDEO"
+                                  ? "terracotta"
+                                  : "emerald"
+                              }
+                              className="text-[9px] font-mono shrink-0"
+                            >
+                              {res.type}
+                            </Badge>
+                            <div className="truncate">
+                              <p className="font-bold text-white text-xs truncate">{res.title}</p>
+                              <a
+                                href={res.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] text-afr-amber underline truncate block"
+                              >
+                                {res.url}
+                              </a>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveResource(idx)}
+                            className="text-slate-400 hover:text-red-400 p-1 shrink-0"
+                            title="Remove Resource"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Hidden File Input for Device Uploads */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*,video/*,application/pdf,.doc,.docx"
+                    className="hidden"
+                  />
+
+                  {/* New Resource Add Form */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-2 border-t border-slate-800/80">
+                    <div className="sm:col-span-3">
+                      <select
+                        value={newResType}
+                        onChange={(e: any) => setNewResType(e.target.value)}
+                        className="w-full h-9 px-2 rounded-lg border border-slate-800 bg-slate-900 text-xs font-mono text-slate-200"
+                      >
+                        <option value="IMAGE">📷 Photo / Diagram</option>
+                        <option value="VIDEO">🎥 Video (YouTube/MP4)</option>
+                        <option value="LINK">🔗 Web Link / Spec</option>
+                        <option value="DOCUMENT">📄 PDF / Document</option>
+                      </select>
+                    </div>
+                    <div className="sm:col-span-4">
+                      <Input
+                        placeholder="Title (e.g. LND Arch)"
+                        value={newResTitle}
+                        onChange={(e) => setNewResTitle(e.target.value)}
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                    <div className="sm:col-span-5">
+                      <Input
+                        placeholder={newResUrl.startsWith("data:") ? "File Loaded from Device ✓" : "URL (https://...) or choose file below"}
+                        value={newResUrl}
+                        onChange={(e) => setNewResUrl(e.target.value)}
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="h-8 text-xs font-mono text-afr-amber border border-afr-amber/40 hover:bg-afr-amber/10"
+                      >
+                        <Upload className="w-3.5 h-3.5 mr-1" />
+                        <span>Choose File from Device</span>
+                      </Button>
+                      <Input
+                        placeholder="Short Description (optional)"
+                        value={newResDesc}
+                        onChange={(e) => setNewResDesc(e.target.value)}
+                        className="h-8 text-xs max-w-xs"
+                      />
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddResource}
+                      className="h-8 text-xs font-mono"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add Attachment
+                    </Button>
+                  </div>
                 </div>
 
                 <div>
