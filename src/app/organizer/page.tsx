@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import io, { Socket } from "socket.io-client";
-import { Zap, Camera, Shield, Plus, Trophy, CheckCircle2, AlertCircle, ExternalLink, Star, DollarSign, Users, MapPin, Edit3, X, Lock, Unlock, BookOpen, Save } from "lucide-react";
+import { Zap, Camera, Shield, Plus, Trophy, CheckCircle2, AlertCircle, ExternalLink, Star, DollarSign, Edit3, X, Lock, Unlock, BookOpen, Save } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -504,69 +504,87 @@ export default function OrganizerPortal() {
   const currentCurriculum = (currentBootcamp?.curriculum as any[]) || [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Organizer Header */}
-      <div className="space-y-4 border-b border-slate-800 pb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Organizer Portal</h1>
-              <Badge variant="terracotta">ORGANIZER</Badge>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#120A00] via-[#1C1200] to-[#120A00] border border-yellow-500/25 p-6 shadow-glow-gold">
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-yellow-500/10 blur-3xl pointer-events-none" />
+        <div className="relative z-10 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Organizer Portal</h1>
+                <p className="text-sm text-white/80 mt-0.5">
+                  Manage curriculum, control quizzes, and execute payouts
+                </p>
+              </div>
             </div>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Manage curriculum, control quizzes, scan QR badges, and execute payouts.
-            </p>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="terracotta" size="sm" onClick={() => setShowCreateModal(true)} className="whitespace-nowrap">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCreateModal(true)}
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-md whitespace-nowrap"
+            >
               <Plus className="w-4 h-4 sm:mr-1.5" />
               <span className="hidden sm:inline">Create Bootcamp</span>
             </Button>
           </div>
-        </div>
 
-        {/* Bootcamp Selection & Actions Row */}
-        {bootcamps.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-2">
-            <select
-              value={selectedBootcampId}
-              onChange={(e) => handleBootcampSelect(e.target.value)}
-              className="flex-1 h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-afr-amber truncate"
-            >
-              {bootcamps.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.title} ({b.city?.name})
-                </option>
-              ))}
-            </select>
+          {bootcamps.length > 0 && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <select
+                value={selectedBootcampId}
+                onChange={(e) => handleBootcampSelect(e.target.value)}
+                className="flex-1 h-10 px-4 rounded-lg border border-white/20 bg-white/10 backdrop-blur-md text-white text-xs sm:text-sm focus:ring-2 focus:ring-white/50 truncate"
+              >
+                {bootcamps.map((b) => (
+                  <option key={b.id} value={b.id} className="bg-slate-900">
+                    {b.title} ({b.city?.name})
+                  </option>
+                ))}
+              </select>
 
-            <div className="flex gap-2">
-              <Button variant="glass" size="sm" onClick={() => setShowCurriculumModal(true)} className="flex-1 sm:flex-none whitespace-nowrap">
-                <BookOpen className="w-4 h-4 sm:mr-1.5 text-afr-amber" />
-                <span className="hidden sm:inline">Manage Content</span>
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCurriculumModal(true)}
+                  className="flex-1 sm:flex-none whitespace-nowrap bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md"
+                >
+                  <BookOpen className="w-4 h-4 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Manage Content</span>
+                </Button>
 
-              <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)} className="flex-1 sm:flex-none whitespace-nowrap">
-                <Edit3 className="w-4 h-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Edit Bootcamp</span>
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEditModal(true)}
+                  className="flex-1 sm:flex-none whitespace-nowrap bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md"
+                >
+                  <Edit3 className="w-4 h-4 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Organizer Quiz Unlock Control Toolbar */}
+      {/* Quiz Unlock Control */}
       {currentBootcamp && (
-        <Card className="afr-glass border-slate-800">
-          <CardContent className="p-4 space-y-4">
+        <div className="relative overflow-hidden rounded-xl afr-glass-terracotta border border-afr-terracotta/40 p-5 shadow-glow-terracotta/20">
+          <div className="relative z-10 space-y-4">
             <div>
-              <h4 className="font-bold text-sm text-white flex items-center space-x-2">
-                <Lock className="w-4 h-4 text-afr-amber flex-shrink-0" />
-                <span>Daily Quiz Unlock Controller</span>
+              <h4 className="font-bold text-base text-white flex items-center space-x-2">
+                <Lock className="w-5 h-5 flex-shrink-0 text-afr-terracotta" />
+                <span>Daily Quiz Controller</span>
               </h4>
-              <p className="text-xs text-slate-400 mt-1">
-                Quizzes are hidden by default. Click to publish milestone quizzes for developers.
+              <p className="text-sm text-slate-400 mt-1">
+                Publish milestone quizzes for developers after they complete tasks
               </p>
             </div>
 
@@ -579,438 +597,468 @@ export default function OrganizerPortal() {
                     key={dNum}
                     type="button"
                     onClick={() => handleToggleQuizUnlock(dNum, !isUnlocked)}
-                    className={`flex items-center justify-center space-x-1.5 px-3 py-2.5 rounded-xl text-xs font-mono font-bold transition-all border whitespace-nowrap ${
+                    className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
                       isUnlocked
-                        ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-glow-emerald"
-                        : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                        ? "bg-afr-emerald text-white shadow-glow-emerald"
+                        : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
                     }`}
                   >
-                    {isUnlocked ? <Unlock className="w-3.5 h-3.5 flex-shrink-0" /> : <Lock className="w-3.5 h-3.5 flex-shrink-0" />}
+                    {isUnlocked ? <Unlock className="w-4 h-4 flex-shrink-0" /> : <Lock className="w-4 h-4 flex-shrink-0" />}
                     <span className="hidden sm:inline">Day {dNum}</span>
                     <span className="sm:hidden">D{dNum}</span>
-                    <span className="hidden md:inline">{isUnlocked ? "Published" : "Locked"}</span>
+                    <span className="hidden md:inline">{isUnlocked ? "✓" : "Locked"}</span>
                   </button>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* No Bootcamps Created Yet Empty State */}
-      {bootcamps.length === 0 ? (
-        <Card className="text-center py-16 afr-glass border-slate-800 shadow-glow-terracotta/10">
-          <CardContent className="space-y-6 max-w-md mx-auto">
-            <div className="w-16 h-16 rounded-2xl bg-afr-terracotta/10 border border-afr-terracotta/30 flex items-center justify-center mx-auto text-afr-terracotta-warm shadow-glow-terracotta">
-              <Shield className="w-8 h-8" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold font-display text-white">No Bootcamps Created Yet</h3>
-              <p className="text-sm text-slate-400">
-                You haven't initialized any Lightning bootcamps. Create your first bootcamp in any African tech hub to unlock the QR camera scanner, daily curriculum editor, and LNURL payouts.
-              </p>
-            </div>
-            <Button variant="terracotta" size="lg" onClick={() => setShowCreateModal(true)} className="shadow-glow-terracotta">
-              <Plus className="w-5 h-5 mr-2" />
-              <span>Create Your First Bootcamp</span>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        /* Main Organizer Layout */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: PWA Camera Scanner */}
-          <div className="space-y-6">
-            <Card className="afr-card border-slate-800 shadow-glow-terracotta/10">
-              <CardHeader>
-                <div className="flex items-center justify-between gap-2">
-                  <Badge variant="terracotta">PWA SCANNER</Badge>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((d) => (
-                      <button
-                        key={d}
-                        onClick={() => setScanDay(d)}
-                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded text-[10px] sm:text-xs font-mono font-bold transition-all ${
-                          scanDay === d ? "bg-afr-terracotta text-white shadow-glow-terracotta" : "bg-slate-900 text-slate-500 hover:text-slate-300"
-                        }`}
-                      >
-                        D{d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <CardTitle className="text-lg sm:text-xl flex items-center space-x-2 mt-2">
-                  <Camera className="w-5 h-5 text-afr-terracotta-warm flex-shrink-0" />
-                  <span>QR Check-In Scanner</span>
-                </CardTitle>
-                <CardDescription>Scan developer badges for Day {scanDay}</CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <Button
-                  variant={scannerActive ? "outline" : "terracotta"}
-                  size="md"
-                  onClick={toggleScanner}
-                  className="w-full"
-                >
-                  {scannerActive ? "Stop Camera Scanner" : "Activate PWA Camera Scanner"}
-                </Button>
-
-                {/* Camera Scanner Viewport */}
-                <div id="qr-reader" className={`w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 ${!scannerActive ? "hidden" : ""}`} />
-
-                {/* Scan Result Feedback */}
-                {scanResult && (
-                  <div
-                    className={`p-4 rounded-xl text-xs space-y-2 border ${
-                      scanResult.type === "success"
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-glow-emerald"
-                        : "bg-red-500/10 border-red-500/30 text-red-300"
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2 font-bold text-sm">
-                      {scanResult.type === "success" ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-red-400" />
-                      )}
-                      <span>{scanResult.text}</span>
-                    </div>
-                    {scanResult.data && (
-                      <p className="text-[11px] font-mono text-slate-400">
-                        Developer: {scanResult.data.developer?.name} &bull; Check-in Day {scanResult.data.dayNumber}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column: Live Arcade Leaderboard & Day 5 Project Review */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Live Arcade Leaderboard Monitor */}
-            <Card className="afr-card border-afr-amber/40 shadow-glow-amber/10">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="live">LIVE WEBSOCKET</Badge>
-                    <Badge variant="amber">REDIS SORTED SET</Badge>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4].map((d) => (
-                      <button
-                        key={d}
-                        onClick={() => handleLeaderboardDayChange(d)}
-                        className={`px-2.5 py-1.5 rounded text-xs font-mono font-bold transition-all ${
-                          leaderboardDay === d ? "bg-afr-amber text-slate-950 shadow-glow-amber" : "bg-slate-900 text-slate-400 hover:text-slate-200"
-                        }`}
-                      >
-                        D{d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <CardTitle className="text-xl flex items-center space-x-2 mt-2">
-                  <Trophy className="w-5 h-5 text-afr-amber flex-shrink-0" />
-                  <span>Leaderboard — Day {leaderboardDay}</span>
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                {leaderboard.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-6 text-center">
-                    No quiz scores logged for Day {leaderboardDay} yet. Real-time updates will stream live when developers complete quizzes!
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {leaderboard.map((item, index) => (
-                      <div
-                        key={item.developerId || index}
-                        className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                          index === 0
-                            ? "bg-amber-500/10 border-amber-500/50 shadow-glow-amber text-afr-amber-light"
-                            : index === 1
-                            ? "bg-slate-900/80 border-slate-700 text-slate-200"
-                            : "bg-slate-950 border-slate-800 text-slate-400"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-black text-sm ${
-                              index === 0
-                                ? "bg-afr-amber text-slate-950"
-                                : "bg-slate-800 text-slate-300"
-                            }`}
-                          >
-                            #{item.rank || index + 1}
-                          </div>
-                          <div>
-                            <p className="font-bold text-sm text-slate-100">{item.name}</p>
-                            <p className="text-[11px] font-mono text-slate-500">{item.lightningAddress || item.email}</p>
-                          </div>
-                        </div>
-
-                        <div className="text-right">
-                          <span className="text-lg font-black font-display text-afr-amber">
-                            {item.score} PTS
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Day 5 Project Submissions & One-Click Sat Payouts */}
-            <Card className="afr-card">
-              <CardHeader>
-                <Badge variant="terracotta" className="w-fit">
-                  DAY 5 HACKATHON ENTRIES
-                </Badge>
-                <CardTitle className="text-xl">Project Review & Automated LNURL Payouts</CardTitle>
-              </CardHeader>
-
-              <CardContent className="space-y-6">
-                {submissions.length === 0 ? (
-                  <p className="text-xs text-slate-500 text-center py-4">No Day 5 project submissions recorded yet.</p>
-                ) : (
-                  submissions.map((sub) => (
-                    <div key={sub.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div>
-                          <h4 className="font-bold text-base text-slate-100">{sub.developer?.name}</h4>
-                          <p className="text-xs font-mono text-afr-amber-light">
-                            LN Address: {sub.developer?.lightningAddress || "Not Configured"}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <a href={sub.githubUrl} target="_blank" rel="noreferrer">
-                            <Button variant="outline" size="sm">
-                              <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                              GitHub
-                            </Button>
-                          </a>
-                          {sub.demoUrl && (
-                            <a href={sub.demoUrl} target="_blank" rel="noreferrer">
-                              <Button variant="glass" size="sm">
-                                Demo App
-                              </Button>
-                            </a>
-                          )}
-                        </div>
-                      </div>
-
-                      <p className="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-                        {sub.description}
-                      </p>
-
-                      <div className="flex items-center space-x-3 pt-2">
-                        <span className="text-xs font-mono text-slate-400">ORGANIZER RATING (0-10):</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={10}
-                          step={0.5}
-                          defaultValue={sub.rating || 0}
-                          onBlur={(e) => handleGradeSubmission(sub.id, Number(e.target.value), "Rated by organizer")}
-                          className="w-20 h-8 text-xs font-bold text-afr-amber"
-                        />
-                        <span className="text-xs text-slate-500">/ 10.0</span>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-3">
-                        <p className="text-xs font-mono font-bold text-afr-amber">
-                          LIGHTNING PAYOUT (LUD-16)
-                        </p>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                          <Input
-                            type="number"
-                            placeholder="Amount in Sats"
-                            defaultValue={10000}
-                            onChange={(e) =>
-                              setPayoutAmounts((prev) => ({ ...prev, [sub.id]: Number(e.target.value) }))
-                            }
-                            className="sm:w-36 h-9 text-xs font-mono"
-                          />
-                          <Button
-                            variant="amber"
-                            size="sm"
-                            onClick={() => handleTriggerPayout(sub)}
-                            className="shadow-glow-amber whitespace-nowrap"
-                          >
-                            <Zap className="w-3.5 h-3.5 mr-1.5 fill-slate-950" />
-                            Pay Sat Prize
-                          </Button>
-                        </div>
-
-                        {payoutLogs[sub.id] && (
-                          <div
-                            className={`p-2.5 rounded-lg text-xs font-mono ${
-                              payoutLogs[sub.id].type === "success"
-                                ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300"
-                                : "bg-red-500/10 border border-red-500/30 text-red-300"
-                            }`}
-                          >
-                            <p>{payoutLogs[sub.id].text}</p>
-                            {payoutLogs[sub.id].preimage && (
-                              <p className="text-[10px] break-all text-slate-400 mt-1">
-                                Preimage Proof: {payoutLogs[sub.id].preimage}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
           </div>
         </div>
       )}
 
-      {/* Manage Daily Curriculum Content Modal */}
+      {bootcamps.length === 0 ? (
+        <div className="relative overflow-hidden rounded-2xl afr-glass border border-slate-800 p-12">
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-afr-amber/10 blur-3xl pointer-events-none" />
+          <div className="relative z-10 text-center space-y-6 max-w-md mx-auto">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-afr-amber to-afr-terracotta flex items-center justify-center mx-auto shadow-glow-amber">
+              <Shield className="w-10 h-10 text-white" />
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-3xl font-bold font-display text-white">No Bootcamps Yet</h3>
+              <p className="text-base text-slate-400">
+                Create your first Lightning bootcamp to unlock QR scanner, curriculum editor, and payouts.
+              </p>
+            </div>
+            <Button
+              variant="amber"
+              size="lg"
+              onClick={() => setShowCreateModal(true)}
+              className="shadow-glow-amber"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              <span>Create Your First Bootcamp</span>
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* QR Scanner — distinct copper/bronze card */}
+          <div className="space-y-6">
+            <div className="card-scanner p-5">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                    <Camera className="w-5 h-5 text-amber-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-amber-100">QR Scanner</h3>
+                    <p className="text-xs text-amber-300/70">Day {scanDay} Check-In</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setScanDay(d)}
+                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
+                        scanDay === d
+                          ? "bg-amber-400 text-slate-950 shadow-glow-terracotta"
+                          : "bg-amber-500/10 border border-amber-500/20 text-amber-300/60 hover:text-amber-200"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                variant={scannerActive ? "outline" : "amber"}
+                size="md"
+                onClick={toggleScanner}
+                className={`w-full ${scannerActive ? "border-amber-500/40 text-amber-200" : "shadow-glow-gold"}`}
+              >
+                {scannerActive ? "Stop Camera Scanner" : "Activate PWA Camera Scanner"}
+              </Button>
+
+              <div id="qr-reader" className={`mt-4 w-full overflow-hidden rounded-lg border border-amber-500/20 bg-black/40 ${!scannerActive ? "hidden" : ""}`} />
+
+              {scanResult && (
+                <div className={`mt-4 p-4 rounded-lg text-sm space-y-2 border ${
+                  scanResult.type === "success"
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                    : "bg-red-500/10 border-red-500/30 text-red-300"
+                }`}>
+                  <div className="flex items-center space-x-2 font-bold">
+                    {scanResult.type === "success"
+                      ? <CheckCircle2 className="w-5 h-5" />
+                      : <AlertCircle className="w-5 h-5" />}
+                    <span>{scanResult.text}</span>
+                  </div>
+                  {scanResult.data && (
+                    <p className="text-xs opacity-70">
+                      Developer: {scanResult.data.developer?.name} · Day {scanResult.data.dayNumber}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 space-y-6">
+            {/* Leaderboard — deep navy card */}
+            <div className="card-leaderboard p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                    <Trophy className="w-5 h-5 text-blue-300" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[10px] font-bold border border-blue-500/30 animate-pulse">LIVE</span>
+                      <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400/80 text-[10px] font-bold border border-blue-500/20">REDIS</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-white">Leaderboard — Day {leaderboardDay}</h3>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4].map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => handleLeaderboardDayChange(d)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                        leaderboardDay === d
+                          ? "bg-blue-500 text-white shadow-glow-navy"
+                          : "bg-blue-500/10 border border-blue-500/20 text-blue-400/70 hover:text-blue-200"
+                      }`}
+                    >
+                      D{d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-black/30 rounded-xl p-4 space-y-3">
+                {leaderboard.length === 0 ? (
+                  <p className="text-sm text-blue-300/50 py-6 text-center">
+                    No scores for Day {leaderboardDay} yet. Updates stream live when developers submit quizzes.
+                  </p>
+                ) : (
+                  leaderboard.map((item, index) => (
+                    <div
+                      key={item.developerId || index}
+                      className={`p-4 rounded-lg flex items-center justify-between transition-all border ${
+                        index === 0
+                          ? "bg-yellow-400/10 border-yellow-400/40"
+                          : index === 1
+                          ? "bg-slate-400/10 border-slate-400/30"
+                          : index === 2
+                          ? "bg-orange-500/10 border-orange-500/30"
+                          : "bg-blue-500/5 border-blue-500/15"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${
+                          index === 0 ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-slate-950"
+                          : index === 1 ? "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-900"
+                          : index === 2 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white"
+                          : "bg-blue-500/20 text-blue-300"
+                        }`}>
+                          #{item.rank || index + 1}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-white">{item.name}</p>
+                          <p className="text-xs text-slate-400">{item.lightningAddress || item.email}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-2xl font-black ${index === 0 ? "text-yellow-300" : "text-white"}`}>
+                          {item.score}
+                        </span>
+                        <p className="text-xs text-slate-500">PTS</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Day 5 Project Review & Payouts */}
+            <div className="relative overflow-hidden rounded-xl afr-glass border border-slate-800 shadow-glass">
+              <div className="p-5">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-afr-emerald to-afr-emerald-dark flex items-center justify-center shadow-glow-emerald">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <span className="px-2 py-0.5 rounded-md bg-afr-emerald/20 text-afr-emerald text-[10px] font-bold border border-afr-emerald/30">DAY 5 HACKATHON</span>
+                    <h3 className="text-lg font-bold text-white mt-1">Project Review & Payouts</h3>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {submissions.length === 0 ? (
+                    <p className="text-sm text-slate-400 text-center py-8">No Day 5 project submissions yet.</p>
+                  ) : (
+                    submissions.map((sub) => (
+                      <div key={sub.id} className="p-4 rounded-lg bg-slate-950/60 border border-slate-800 space-y-4 hover:border-afr-amber/30 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <h4 className="font-bold text-base text-white">{sub.developer?.name}</h4>
+                            <p className="text-xs text-afr-amber font-mono">
+                              ⚡ {sub.developer?.lightningAddress || "Not Configured"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <a href={sub.githubUrl} target="_blank" rel="noreferrer">
+                              <Button variant="outline" size="sm">
+                                <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                                GitHub
+                              </Button>
+                            </a>
+                            {sub.demoUrl && (
+                              <a href={sub.demoUrl} target="_blank" rel="noreferrer">
+                                <Button variant="outline" size="sm">
+                                  <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                                  Demo
+                                </Button>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        <p className="text-sm text-slate-300 leading-relaxed bg-slate-950 p-3 rounded-lg border border-slate-800">
+                          {sub.description}
+                        </p>
+
+                        <div className="flex items-center space-x-3 pt-2">
+                          <span className="text-xs font-bold text-slate-400">RATING:</span>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={10}
+                            step={0.5}
+                            defaultValue={sub.rating || 0}
+                            onBlur={(e) => handleGradeSubmission(sub.id, Number(e.target.value), "Rated by organizer")}
+                            className="w-20 h-8 text-sm font-bold text-afr-emerald bg-slate-950 border-slate-800"
+                          />
+                          <span className="text-xs text-slate-500">/ 10.0</span>
+                          {sub.rating >= 8 && (
+                            <Star className="w-4 h-4 text-afr-amber fill-afr-amber" />
+                          )}
+                        </div>
+
+                        <div className="p-4 rounded-lg afr-glass-emerald space-y-3">
+                          <p className="text-sm font-bold text-afr-emerald">
+                            ⚡ LIGHTNING PAYOUT (LUD-16)
+                          </p>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <Input
+                              type="number"
+                              placeholder="Amount in Sats"
+                              defaultValue={10000}
+                              onChange={(e) =>
+                                setPayoutAmounts((prev) => ({ ...prev, [sub.id]: Number(e.target.value) }))
+                              }
+                              className="sm:w-36 h-9 text-sm font-mono bg-slate-950 border-afr-emerald/30 text-afr-emerald"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleTriggerPayout(sub)}
+                              className="bg-afr-emerald hover:bg-afr-emerald-dark text-white shadow-glow-emerald whitespace-nowrap"
+                            >
+                              <Zap className="w-4 h-4 mr-1.5 fill-white" />
+                              Pay Sat Prize
+                            </Button>
+                          </div>
+
+                          {payoutLogs[sub.id] && (
+                            <div
+                              className={`p-3 rounded-lg text-sm font-mono ${
+                                payoutLogs[sub.id].type === "success"
+                                  ? "bg-afr-emerald/20 border border-afr-emerald/50 text-afr-emerald"
+                                  : "bg-afr-terracotta/20 border border-afr-terracotta/50 text-afr-terracotta-warm"
+                              }`}
+                            >
+                              <p>{payoutLogs[sub.id].text}</p>
+                              {payoutLogs[sub.id].preimage && (
+                                <p className="text-xs break-all text-slate-400 mt-2">
+                                  Preimage: {payoutLogs[sub.id].preimage}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Daily Curriculum Modal */}
       {showCurriculumModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl afr-card p-6 border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold font-display text-white">Manage Daily Curriculum & Tasks</h3>
-              <button onClick={() => setShowCurriculumModal(false)} className="text-slate-400 hover:text-white">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl afr-glass rounded-2xl shadow-glass border border-slate-800 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-afr-amber to-afr-terracotta p-5 flex items-center justify-between">
+              <h3 className="text-2xl font-bold font-display text-white">Manage Daily Curriculum</h3>
+              <button
+                onClick={() => setShowCurriculumModal(false)}
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Select Day Tab */}
-            <div className="flex items-center space-x-2 p-1 rounded-xl bg-slate-950 border border-slate-800">
-              {[1, 2, 3, 4, 5].map((dNum) => (
-                <button
-                  key={dNum}
-                  onClick={() => handleCurrDaySelect(dNum)}
-                  className={`flex-1 py-2 text-xs font-mono font-bold rounded-lg transition-all ${
-                    currDay === dNum ? "bg-afr-amber text-slate-950" : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  DAY {dNum}
-                </button>
-              ))}
+            <div className="p-6 space-y-5">
+              <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-950 border border-slate-800">
+                {[1, 2, 3, 4, 5].map((dNum) => (
+                  <button
+                    key={dNum}
+                    onClick={() => handleCurrDaySelect(dNum)}
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
+                      currDay === dNum
+                        ? "bg-afr-amber text-slate-950 shadow-glow-amber"
+                        : "text-slate-400 hover:text-white hover:bg-slate-900"
+                    }`}
+                  >
+                    DAY {dNum}
+                  </button>
+                ))}
+              </div>
+
+              {currSaveMsg && (
+                <div className="p-4 rounded-lg bg-afr-emerald/20 border border-afr-emerald/50 text-afr-emerald text-sm font-medium">
+                  ✓ {currSaveMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveCurriculum} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">Day {currDay} Module Title</label>
+                  <Input
+                    required
+                    value={currTitle}
+                    onChange={(e) => setCurrTitle(e.target.value)}
+                    className="bg-slate-950 border-slate-800 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">Curriculum Content (Markdown Format)</label>
+                  <textarea
+                    required
+                    rows={6}
+                    value={currContent}
+                    onChange={(e) => setCurrContent(e.target.value)}
+                    placeholder="# Day 1 Topic..."
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-amber focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">Mandatory Task Checklist (One task per line)</label>
+                  <textarea
+                    rows={3}
+                    value={currTasks}
+                    onChange={(e) => setCurrTasks(e.target.value)}
+                    placeholder="Understand Payment Channels&#10;Set up LND node&#10;Verify invoice"
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-amber focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">Quiz Difficulty</label>
+                  <select
+                    value={currDifficulty}
+                    onChange={(e) => setCurrDifficulty(e.target.value)}
+                    className="w-full h-11 px-4 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm focus:ring-2 focus:ring-afr-amber focus:border-transparent"
+                  >
+                    <option value="EASY">EASY</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="HARD">HARD</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4">
+                  <Button type="button" variant="ghost" onClick={() => setShowCurriculumModal(false)}>
+                    Close
+                  </Button>
+                  <Button type="submit" variant="amber" className="shadow-glow-amber">
+                    <Save className="w-4 h-4 mr-1.5" />
+                    Save Day {currDay} Curriculum
+                  </Button>
+                </div>
+              </form>
             </div>
-
-            {currSaveMsg && (
-              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
-                {currSaveMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveCurriculum} className="space-y-4">
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Day {currDay} Module Title</label>
-                <Input required value={currTitle} onChange={(e) => setCurrTitle(e.target.value)} />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Curriculum Content (Markdown Format)</label>
-                <textarea
-                  required
-                  rows={6}
-                  value={currContent}
-                  onChange={(e) => setCurrContent(e.target.value)}
-                  placeholder="# Day 1 Topic..."
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs font-mono text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Mandatory Task Checklist (One task per line)</label>
-                <textarea
-                  rows={3}
-                  value={currTasks}
-                  onChange={(e) => setCurrTasks(e.target.value)}
-                  placeholder="Understand Payment Channels&#10;Set up LND node&#10;Verify invoice"
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Quiz Difficulty</label>
-                <select
-                  value={currDifficulty}
-                  onChange={(e) => setCurrDifficulty(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs"
-                >
-                  <option value="EASY">EASY</option>
-                  <option value="MEDIUM">MEDIUM</option>
-                  <option value="HARD">HARD</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-4">
-                <Button type="button" variant="ghost" onClick={() => setShowCurriculumModal(false)}>
-                  Close
-                </Button>
-                <Button type="submit" variant="amber">
-                  <Save className="w-4 h-4 mr-1.5" />
-                  Save Day {currDay} Curriculum
-                </Button>
-              </div>
-            </form>
           </div>
         </div>
       )}
 
       {/* Create Bootcamp Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg afr-card p-6 border-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4">
+          <div className="w-full max-w-lg afr-glass rounded-2xl shadow-glass border border-slate-800 overflow-hidden">
+            <div className="bg-gradient-to-r from-afr-amber to-afr-terracotta p-5 flex items-center justify-between">
               <h3 className="text-xl font-bold font-display text-white">Create New AFR Bootcamp</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateBootcamp} className="space-y-4">
+            <form onSubmit={handleCreateBootcamp} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Bootcamp Title</label>
-                <Input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="AFR Nairobi Lightning Developer Bootcamp" />
+                <label className="block text-sm font-bold text-white mb-2">Bootcamp Title</label>
+                <Input
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="AFR Nairobi Lightning Developer Bootcamp"
+                  className="bg-slate-950 border-slate-800 text-white"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Description</label>
+                <label className="block text-sm font-bold text-white mb-2">Description</label>
                 <textarea
                   required
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="5-day intensive Lightning Network developer bootcamp..."
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-xs text-slate-100"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-amber"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1">African Country</label>
+                  <label className="block text-sm font-bold text-white mb-2">African Country</label>
                   <select
                     required
                     value={createCountryId}
                     onChange={(e) => handleCountryChange(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs"
+                    className="w-full h-11 px-3 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm focus:ring-2 focus:ring-afr-amber"
                   >
-                    <option value="">Select Country (54 African Nations)</option>
+                    <option value="">Select Country</option>
                     {countries.map((c) => (
                       <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1">City Hub</label>
+                  <label className="block text-sm font-bold text-white mb-2">City Hub</label>
                   <select
                     required
                     value={createCityId}
                     onChange={(e) => setCreateCityId(e.target.value)}
                     disabled={!createCountryId}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs disabled:opacity-40"
+                    className="w-full h-11 px-3 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm disabled:opacity-40 focus:ring-2 focus:ring-afr-amber"
                   >
                     <option value="">Select City</option>
                     {cities.map((ct) => (
@@ -1021,15 +1069,21 @@ export default function OrganizerPortal() {
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Max Seat Capacity</label>
-                <Input type="number" min={1} value={maxSeats} onChange={(e) => setMaxSeats(Number(e.target.value))} />
+                <label className="block text-sm font-bold text-white mb-2">Max Seat Capacity</label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={maxSeats}
+                  onChange={(e) => setMaxSeats(Number(e.target.value))}
+                  className="bg-slate-950 border-slate-800 text-white"
+                />
               </div>
 
-              <div className="flex items-center justify-end space-x-3 pt-4">
+              <div className="flex items-center justify-end gap-3 pt-4">
                 <Button type="button" variant="ghost" onClick={() => setShowCreateModal(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" variant="terracotta">
+                <Button type="submit" variant="amber" className="shadow-glow-amber">
                   Create Bootcamp
                 </Button>
               </div>
@@ -1040,43 +1094,57 @@ export default function OrganizerPortal() {
 
       {/* Edit Bootcamp Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg afr-card p-6 border-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4">
+          <div className="w-full max-w-lg afr-glass rounded-2xl shadow-glass border border-slate-800 overflow-hidden">
+            <div className="bg-gradient-to-r from-afr-terracotta to-afr-terracotta-deep p-5 flex items-center justify-between">
               <h3 className="text-xl font-bold font-display text-white">Edit Bootcamp Details</h3>
-              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleEditBootcamp} className="space-y-4">
+            <form onSubmit={handleEditBootcamp} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Bootcamp Title</label>
-                <Input required value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                <label className="block text-sm font-bold text-white mb-2">Bootcamp Title</label>
+                <Input
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-white"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Description</label>
+                <label className="block text-sm font-bold text-white mb-2">Description</label>
                 <textarea
                   required
                   rows={3}
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-xs text-slate-100"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-terracotta"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Max Seat Capacity</label>
-                  <Input type="number" min={1} value={editMaxSeats} onChange={(e) => setEditMaxSeats(Number(e.target.value))} />
+                  <label className="block text-sm font-bold text-white mb-2">Max Seat Capacity</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editMaxSeats}
+                    onChange={(e) => setEditMaxSeats(Number(e.target.value))}
+                    className="bg-slate-950 border-slate-800 text-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Status</label>
+                  <label className="block text-sm font-bold text-white mb-2">Status</label>
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs"
+                    className="w-full h-11 px-3 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm focus:ring-2 focus:ring-afr-terracotta"
                   >
                     <option value="UPCOMING">UPCOMING</option>
                     <option value="ACTIVE">ACTIVE</option>
@@ -1086,11 +1154,11 @@ export default function OrganizerPortal() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end space-x-3 pt-4">
+              <div className="flex items-center justify-end gap-3 pt-4">
                 <Button type="button" variant="ghost" onClick={() => setShowEditModal(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" variant="amber">
+                <Button type="submit" variant="terracotta" className="shadow-glow-terracotta">
                   Save Changes
                 </Button>
               </div>

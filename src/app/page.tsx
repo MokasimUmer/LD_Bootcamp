@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Zap, MapPin, Users, Calendar, ArrowRight, Sparkles, Shield, CheckCircle2, AlertCircle } from "lucide-react";
+import { Zap, MapPin, Users, Calendar, ArrowRight, Shield, CheckCircle2, AlertCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -181,177 +181,186 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-12">
-      {/* Hero Section */}
-      <section className="relative text-center py-16 px-4 rounded-3xl afr-glass border-slate-800 shadow-glow-amber/10 overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-afr-amber/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-afr-terracotta/10 blur-3xl pointer-events-none" />
+    <div className="space-y-8">
 
-        <div className="relative z-10 max-w-4xl mx-auto space-y-6">
-          <Badge variant="amber" className="mx-auto">
-            AFRICA FREE ROUTING (AFR) &bull; LIGHTNING DEVELOPER BOOTCAMP
-          </Badge>
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#120A00] via-[#1C1000] to-[#120A00] border border-yellow-500/20 p-8 sm:p-14 shadow-2xl">
+        {/* decorative blobs */}
+        <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-yellow-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-amber-600/10 blur-3xl" />
 
-          <h1 className="text-4xl md:text-6xl font-black font-display tracking-tight text-white leading-tight">
-            Empowering <span className="afr-gradient-gold">African Developers</span> to Build the Future of Bitcoin Lightning
+        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-6">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-300 text-[11px] font-bold tracking-wider">
+            <Zap className="w-3 h-3 fill-yellow-300" />
+            AFRICA FREE ROUTING · LIGHTNING DEVELOPER BOOTCAMP
+          </span>
+
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white leading-tight">
+            Build the Future of{" "}
+            <span className="bg-gradient-to-r from-yellow-300 to-amber-400 bg-clip-text text-transparent">
+              Bitcoin Lightning
+            </span>{" "}
+            in Africa
           </h1>
 
-          <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            5-day intensive hybrid bootcamps across 54 African nations. Master payment channels, LNURL specs, WebLN integration, and claim instant satoshi payouts.
+          <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
+            5-day intensive bootcamps across 54 African nations. Master payment channels, LNURL specs, WebLN, and claim instant satoshi payouts.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             {!user ? (
               <>
                 <Link href="/auth/register">
-                  <Button variant="amber" size="lg" className="shadow-glow-amber">
+                  <Button variant="primary" size="lg" className="shadow-glow-gold">
                     <Zap className="w-5 h-5 mr-2 fill-slate-950" />
-                    <span>Apply for Bootcamp</span>
+                    Apply for Bootcamp
                   </Button>
                 </Link>
                 <Link href="/auth/login">
-                  <Button variant="glass" size="lg">
+                  <Button variant="outline" size="lg">
                     Sign In
                   </Button>
                 </Link>
               </>
             ) : user.role === "ORGANIZER" || user.role === "ADMIN" ? (
               <Link href="/organizer">
-                <Button variant="terracotta" size="lg" className="shadow-glow-terracotta">
+                <Button variant="terracotta" size="lg">
                   <Shield className="w-5 h-5 mr-2" />
-                  <span>Go to Organizer Portal</span>
+                  Go to Organizer Portal
                 </Button>
               </Link>
             ) : (
               <Link href="/developer">
-                <Button variant="amber" size="lg" className="shadow-glow-amber">
+                <Button variant="primary" size="lg" className="shadow-glow-gold">
                   <Zap className="w-5 h-5 mr-2 fill-slate-950" />
-                  <span>Go to Developer Portal</span>
+                  Go to Developer Portal
                 </Button>
               </Link>
             )}
           </div>
+
+          {/* feature pills */}
+          <div className="flex flex-wrap justify-center gap-2 pt-2">
+            {["QR Attendance", "Live Leaderboard", "LNURL Payouts", "Daily Quizzes", "Hackathon"].map((f) => (
+              <span key={f} className="px-3 py-1 rounded-full bg-yellow-400/[0.07] border border-yellow-400/20 text-yellow-200/70 text-xs">
+                {f}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Hierarchical Location Filter */}
-      <section className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-          <div>
-            <h2 className="text-2xl font-bold font-display text-white">Find Bootcamps in Africa</h2>
-            <p className="text-xs text-slate-400">Filter upcoming Lightning bootcamps by African country & city hub.</p>
-          </div>
+      {/* ── Filter + Bootcamps ── */}
+      <section className="space-y-5">
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Country Selector */}
-            <div className="flex items-center space-x-2 afr-glass px-3 py-1.5 rounded-xl border-slate-800">
-              <MapPin className="w-4 h-4 text-afr-amber" />
+        {/* Filter bar */}
+        <div className="glass rounded-xl border border-yellow-400/[0.10] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-white">Find a Bootcamp</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Filter by country and city hub</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="flex items-center gap-2 bg-[#0D1117] border border-yellow-400/20 rounded-lg px-3 py-2">
+              <MapPin className="w-4 h-4 text-yellow-400/70 shrink-0" />
               <select
                 value={selectedCountryId}
                 onChange={(e) => handleCountryChange(e.target.value)}
-                className="bg-transparent text-xs font-mono text-slate-200 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer min-w-[140px]"
               >
-                <option value="" className="bg-slate-900 text-slate-200">All 54 African Countries</option>
+                <option value="" className="bg-[#0D1117]">All African Countries</option>
                 {countries.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-slate-900 text-slate-200">
-                    {c.name} ({c.code})
-                  </option>
+                  <option key={c.id} value={c.id} className="bg-[#0D1117]">{c.name} ({c.code})</option>
                 ))}
               </select>
             </div>
 
-            {/* City Selector */}
-            <div className="flex items-center space-x-2 afr-glass px-3 py-1.5 rounded-xl border-slate-800">
+            <div className="flex items-center gap-2 bg-[#0D1117] border border-yellow-400/20 rounded-lg px-3 py-2">
               <select
                 value={selectedCityId}
                 onChange={(e) => handleCityChange(e.target.value)}
                 disabled={!selectedCountryId || cities.length === 0}
-                className="bg-transparent text-xs font-mono text-slate-200 focus:outline-none cursor-pointer disabled:opacity-40"
+                className="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer disabled:opacity-40 min-w-[120px]"
               >
-                <option value="" className="bg-slate-900 text-slate-200">All City Hubs</option>
+                <option value="" className="bg-[#0D1117]">All City Hubs</option>
                 {cities.map((ct) => (
-                  <option key={ct.id} value={ct.id} className="bg-slate-900 text-slate-200">
-                    {ct.name}
-                  </option>
+                  <option key={ct.id} value={ct.id} className="bg-[#0D1117]">{ct.name}</option>
                 ))}
               </select>
             </div>
           </div>
         </div>
 
-        {/* Bootcamp Cards List */}
+        {/* Bootcamp cards */}
         {loading ? (
-          <div className="text-center py-12 text-slate-400 font-mono text-xs">
-            Loading AFR Bootcamps...
-          </div>
+          <div className="text-center py-16 text-slate-500 text-sm">Loading bootcamps…</div>
         ) : bootcamps.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent className="space-y-4">
-              <AlertCircle className="w-10 h-10 text-afr-amber mx-auto" />
-              <p className="text-slate-400 text-sm">No bootcamps found matching the selected location.</p>
-            </CardContent>
-          </Card>
+          <div className="card p-12 text-center space-y-3">
+            <AlertCircle className="w-10 h-10 text-slate-600 mx-auto" />
+            <p className="text-slate-400 text-sm">No bootcamps found for the selected location.</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {bootcamps.map((bootcamp) => (
-              <Card key={bootcamp.id} className="afr-card hover:border-afr-amber/50 transition-all flex flex-col justify-between">
-                <CardHeader className="space-y-3">
-                  <div className="flex items-center justify-between">
+              <div key={bootcamp.id} className="card flex flex-col justify-between gap-4 p-5 group">
+
+                {/* top */}
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
                     <Badge variant="amber">
-                      📍 {bootcamp.city?.country?.name || "Africa"} &bull; {bootcamp.city?.name}
+                      📍 {bootcamp.city?.country?.name || "Africa"} · {bootcamp.city?.name}
                     </Badge>
                     <Badge variant={bootcamp.isFull ? "terracotta" : "emerald"}>
-                      {bootcamp.remainingSeats} SEATS LEFT
+                      {bootcamp.remainingSeats} left
                     </Badge>
                   </div>
 
-                  <CardTitle className="text-xl leading-snug">{bootcamp.title}</CardTitle>
-                  <CardDescription className="line-clamp-2 text-xs leading-relaxed">
+                  <h3 className="text-base font-bold text-white leading-snug group-hover:text-yellow-300 transition-colors">
+                    {bootcamp.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
                     {bootcamp.description}
-                  </CardDescription>
-                </CardHeader>
+                  </p>
+                </div>
 
-                <CardContent className="space-y-4 pt-0">
-                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                    <div className="flex items-center space-x-1.5">
-                      <Users className="w-3.5 h-3.5 text-afr-amber" />
-                      <span>{bootcamp.registeredCount} / {bootcamp.maxSeats} Devs</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-afr-amber" />
-                      <span>5-Day Intensive</span>
-                    </div>
+                {/* stats */}
+                <div className="flex items-center gap-4 bg-[#0D1117]/80 border border-[#1A2236] rounded-lg px-3 py-2 text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-yellow-400/70" />
+                    {bootcamp.registeredCount}/{bootcamp.maxSeats} devs
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-amber-500/70" />
+                    5-day intensive
+                  </span>
+                </div>
+
+                {/* feedback */}
+                {registerMsg && registerMsg.id === bootcamp.id && (
+                  <div className={`p-3 rounded-lg text-xs flex items-start gap-2 border ${
+                    registerMsg.type === "success"
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                      : "bg-red-500/10 border-red-500/30 text-red-300"
+                  }`}>
+                    {registerMsg.type === "success"
+                      ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      : <AlertCircle className="w-4 h-4 shrink-0" />}
+                    <span>{registerMsg.text}</span>
                   </div>
+                )}
 
-                  {registerMsg && registerMsg.id === bootcamp.id && (
-                    <div
-                      className={`p-2.5 rounded-lg text-xs flex items-center space-x-2 border ${
-                        registerMsg.type === "success"
-                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                          : "bg-red-500/10 border-red-500/30 text-red-300"
-                      }`}
-                    >
-                      {registerMsg.type === "success" ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                      )}
-                      <span>{registerMsg.text}</span>
-                    </div>
+                {/* CTA */}
+                <Button
+                  variant={bootcamp.isFull ? "ghost" : "primary"}
+                  size="md"
+                  disabled={bootcamp.isFull}
+                  onClick={() => handleRegisterSeat(bootcamp.id)}
+                  className={`w-full ${!bootcamp.isFull ? "shadow-glow-gold" : ""}`}
+                >
+                  {bootcamp.isFull ? "Bootcamp Full" : (
+                    <>Reserve Seat <ArrowRight className="w-4 h-4 ml-1.5" /></>
                   )}
-
-                  <Button
-                    variant={bootcamp.isFull ? "ghost" : "amber"}
-                    size="md"
-                    disabled={bootcamp.isFull}
-                    onClick={() => handleRegisterSeat(bootcamp.id)}
-                    className="w-full shadow-glow-amber"
-                  >
-                    <span>{bootcamp.isFull ? "Bootcamp Full" : "Reserve Seat Now"}</span>
-                    {!bootcamp.isFull && <ArrowRight className="w-4 h-4 ml-1.5" />}
-                  </Button>
-                </CardContent>
-              </Card>
+                </Button>
+              </div>
             ))}
           </div>
         )}
