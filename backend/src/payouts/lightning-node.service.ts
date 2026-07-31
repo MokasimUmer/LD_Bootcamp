@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as https from 'https';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
 
 export interface PaymentResponse {
   success: boolean;
@@ -15,23 +16,101 @@ export class LightningNodeService {
   private readonly logger = new Logger(LightningNodeService.name);
 
   /**
+   * Helper to format LND REST host URL
+   */
+  private getLndRestHost(): string {
+    let host = (process.env.LND_REST_HOST || '').trim();
+    if (!host) return '';
+    if (!host.startsWith('http://') && !host.startsWith('https://')) {
+      host = `https://${host}`;
+    }
+    return host.replace(/\/$/, '');
+  }
+
+  /**
+   * Helper to get Macaroon hex string (supports raw hex OR filepath to admin.macaroon)
+   */
+  private getMacaroonHex(): string {
+    const val = (process.env.LND_MACAROON_HEX || '').trim();
+    if (!val) return '';
+
+    // Check if it's a filepath to macaroon file
+    if (val.startsWith('/') || val.endsWith('.macaroon')) {
+      try {
+        if (fs.existsSync(val)) {
+          const buffer = fs.readFileSync(val);
+          return buffer.toString('hex');
+        }
+      } catch (err: any) {
+        this.logger.warn(`Could not read macaroon file at path '${val}': ${err.message}`);
+      }
+    }
+
+    return val;
+  }
+
+  /**
+   * Tests connection to the connected Polar LND Node (/v1/getinfo)
+   */
+  async getNodeInfo(): Promise<any> {
+    const baseUrl = this.getLndRestHost();
+    const macaroon = this.getMacaroonHex();
+
+    if (!baseUrl || !macaroon) {
+      return {
+        connected: false,
+        message: 'LND_REST_HOST or LND_MACAROON_HEX is missing in backend/.env',
+      };
+    }
+
+    try {
+      const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+      const response = await axios.get(`${baseUrl}/v1/getinfo`, {
+        headers: {
+          'Grpc-Metadata-macaroon': macaroon,
+        },
+        httpsAgent,
+        timeout: 5000,
+      });
+
+      if (response.data) {
+        return {
+          connected: true,
+          alias: response.data.alias,
+          identity_pubkey: response.data.identity_pubkey,
+          block_height: response.data.block_height,
+          synced_to_chain: response.data.synced_to_chain,
+          num_active_channels: response.data.num_active_channels,
+          version: response.data.version,
+          network: response.data.chains?.[0]?.network || 'regtest',
+          baseUrl,
+        };
+      }
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message;
+      return {
+        connected: false,
+        error: errorMsg,
+        baseUrl,
+      };
+    }
+
+    return { connected: false, message: 'No response from LND node' };
+  }
+
+  /**
    * Pays a BOLT-11 Lightning invoice via Polar LND REST API or fallback simulator.
    */
   async payInvoice(bolt11: string): Promise<PaymentResponse> {
-    const lndHost = process.env.LND_REST_HOST;
-    const macaroon = process.env.LND_MACAROON_HEX;
+    const baseUrl = this.getLndRestHost();
+    const macaroon = this.getMacaroonHex();
 
-    if (lndHost && macaroon && macaroon !== '0201036c6e64...') {
+    if (baseUrl && macaroon) {
       try {
-        this.logger.log(`[Polar/LND] Dispatching BOLT11 invoice payment to LND Node at ${lndHost}`);
+        this.logger.log(`[Polar/LND] Dispatching BOLT11 invoice payment to LND Node at ${baseUrl}`);
 
-        // Polar uses self-signed TLS certificates for local LND nodes
         const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-        // Clean host trailing slash
-        const baseUrl = lndHost.replace(/\/$/, '');
-
-        // LND REST API for paying BOLT11 invoices
         const response = await axios.post(
           `${baseUrl}/v1/channels/transactions`,
           { payment_request: bolt11 },
@@ -47,7 +126,6 @@ export class LightningNodeService {
 
         if (response.data && response.data.payment_preimage) {
           const rawPreimage = response.data.payment_preimage;
-          // LND returns base64 or hex preimage
           let preimageHex = rawPreimage;
           try {
             preimageHex = Buffer.from(rawPreimage, 'base64').toString('hex');

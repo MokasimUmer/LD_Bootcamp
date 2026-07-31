@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { PayoutsService, ProcessPayoutDto, ClaimWinnerPrizeDto } from './payouts.service';
+import { LightningNodeService } from './lightning-node.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -7,7 +8,15 @@ import { Role } from '@prisma/client';
 
 @Controller('api/payouts')
 export class PayoutsController {
-  constructor(private readonly payoutsService: PayoutsService) {}
+  constructor(
+    private readonly payoutsService: PayoutsService,
+    private readonly lightningNode: LightningNodeService,
+  ) {}
+
+  @Get('node-info')
+  async getNodeInfo() {
+    return this.lightningNode.getNodeInfo();
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ORGANIZER, Role.ADMIN)
