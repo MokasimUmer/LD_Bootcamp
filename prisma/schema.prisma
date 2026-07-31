@@ -1,0 +1,198 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  DEVELOPER
+  ORGANIZER
+  ADMIN
+}
+
+enum BootcampStatus {
+  DRAFT
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  CANCELLED
+  ATTENDED
+  GRADUATED
+}
+
+enum QuizDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String
+  name             String
+  role             Role     @default(DEVELOPER)
+  lightningAddress String?  // e.g. user@getalby.com (LUD-16)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  createdBootcamps    Bootcamp[]     @relation("BootcampCreator")
+  registrations       Registration[]
+  quizScores          QuizScore[]
+  submissions         Submission[]
+  payouts             Payout[]
+  scannedLogs         AttendanceLog[] @relation("ScannedByOrganizer")
+  reviewedSubmissions Submission[]    @relation("ReviewedByOrganizer")
+
+  @@map("users")
+}
+
+model Country {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  code      String   @unique // ISO country code e.g. KE, NG, ZA, GH
+  cities    City[]
+  createdAt DateTime @default(now())
+
+  @@map("countries")
+}
+
+model City {
+  id        String     @id @default(uuid())
+  name      String
+  countryId String
+  country   Country    @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  bootcamps Bootcamp[]
+  createdAt DateTime   @default(now())
+
+  @@unique([name, countryId])
+  @@map("cities")
+}
+
+model Bootcamp {
+  id          String         @id @default(uuid())
+  title       String
+  description String         @db.Text
+  cityId      String
+  city        City           @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  maxSeats    Int
+  startDate   DateTime
+  endDate     DateTime
+  status      BootcampStatus @default(UPCOMING)
+  
+  // Curriculum content stored as JSON array: [{ day: 1, title: '...', contentMarkdown: '...', quizDifficulty: 'MEDIUM', quizPrompt: '...' }]
+  curriculum  Json           @default("[]")
+
+  createdById String
+  createdBy   User           @relation("BootcampCreator", fields: [createdById], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  registrations Registration[]
+  quizScores    QuizScore[]
+  submissions   Submission[]
+  payouts       Payout[]
+
+  @@map("bootcamps")
+}
+
+model Registration {
+  id           String             @id @default(uuid())
+  developerId  String
+  developer    User               @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  bootcampId   String
+  bootcamp     Bootcamp           @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  qrToken      String             @unique @default(uuid())
+  status       RegistrationStatus @default(REGISTERED)
+  registeredAt DateTime           @default(now())
+
+  attendanceLogs AttendanceLog[]
+
+  @@unique([developerId, bootcampId])
+  @@map("registrations")
+}
+
+model AttendanceLog {
+  id             String       @id @default(uuid())
+  registrationId String
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  dayNumber      Int          // Days 1 to 5
+  scannedAt      DateTime     @default(now())
+  scannedById    String
+  scannedBy      User         @relation("ScannedByOrganizer", fields: [scannedById], references: [id])
+
+  @@unique([registrationId, dayNumber]) // Prevent duplicate daily scans
+  @@map("attendance_logs")
+}
+
+model QuizScore {
+  id             String         @id @default(uuid())
+  developerId    String
+  developer      User           @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  bootcampId     String
+  bootcamp       Bootcamp       @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  dayNumber      Int            // Days 1 to 4
+  score          Int            // Earned score/points
+  totalQuestions Int            // Total questions
+  difficulty     QuizDifficulty @default(MEDIUM)
+  completedAt    DateTime       @default(now())
+
+  @@unique([developerId, bootcampId, dayNumber])
+  @@map("quiz_scores")
+}
+
+model Submission {
+  id            String    @id @default(uuid())
+  developerId   String
+  developer     User      @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  bootcampId    String
+  bootcamp      Bootcamp  @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  githubUrl     String
+  demoUrl       String?
+  description   String    @db.Text
+  rating        Float?    // 0.0 - 10.0 scale given by organizer
+  reviewComment String?   @db.Text
+  reviewedById  String?
+  reviewedBy    User?     @relation("ReviewedByOrganizer", fields: [reviewedById], references: [id])
+  submittedAt   DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  payouts       Payout[]
+
+  @@unique([developerId, bootcampId])
+  @@map("submissions")
+}
+
+model Payout {
+  id               String       @id @default(uuid())
+  developerId      String
+  developer        User         @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  bootcampId       String
+  bootcamp         Bootcamp     @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  submissionId     String?
+  submission       Submission?  @relation(fields: [submissionId], references: [id])
+  lightningAddress String       // e.g. user@getalby.com
+  amountMsat       BigInt       // Amount in millisatoshis
+  bolt11           String?      @db.Text // BOLT11 payment request
+  preimage         String?      // Settlement proof preimage
+  status           PayoutStatus @default(PENDING)
+  errorMessage     String?
+  createdAt        DateTime     @default(now())
+  paidAt           DateTime?
+
+  @@map("payouts")
+}
