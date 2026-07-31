@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { Zap, Award, QrCode, BookOpen, CheckCircle2, Trophy, Send, Edit3, AlertCircle, ArrowRight, Shield, Lock, CheckSquare, Square } from "lucide-react";
+import { Zap, CheckCircle2, Trophy, Send, AlertCircle, Lock, CheckSquare, Square } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -22,7 +22,6 @@ export default function DeveloperPortal() {
   const [quizData, setQuizData] = useState<any>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [qId: number]: number }>({});
   const [quizResult, setQuizResult] = useState<any>(null);
-  const [quizLoading, setQuizLoading] = useState(false);
 
   // Day 5 Submission Form
   const [githubUrl, setGithubUrl] = useState("");
@@ -81,7 +80,6 @@ export default function DeveloperPortal() {
   };
 
   const fetchQuiz = async (bootcampId: string, dayNum: number, token?: string) => {
-    setQuizLoading(true);
     setQuizResult(null);
     setSelectedAnswers({});
     const authToken = token || localStorage.getItem("afr_token");
@@ -92,8 +90,6 @@ export default function DeveloperPortal() {
       setQuizData(res.data);
     } catch (e) {
       setQuizData(null);
-    } finally {
-      setQuizLoading(false);
     }
   };
 
@@ -170,7 +166,7 @@ export default function DeveloperPortal() {
     e.preventDefault();
     const token = localStorage.getItem("afr_token");
     try {
-      const res = await axios.put(
+      await axios.put(
         "http://localhost:4000/api/auth/lightning-address",
         { lightningAddress: lnAddress },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -199,61 +195,75 @@ export default function DeveloperPortal() {
   const allTasksDone = dayTasks.every((_: any, idx: number) => completedTasks[activeDay]?.[idx]);
 
   return (
-    <div className="space-y-8">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <div className="flex items-center space-x-2">
-            <h1 className="text-3xl font-bold font-display text-white">Developer Portal</h1>
-            <Badge variant="amber">DEVELOPER</Badge>
+    <div className="space-y-6">
+      {/* Developer Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#120A00] via-[#1C1200] to-[#120A00] border border-yellow-500/25 p-6 shadow-glow-gold">
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-yellow-500/10 blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <Zap className="w-6 h-6 text-white fill-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Developer Portal</h1>
+                <span className="px-2 py-0.5 rounded-md bg-white/20 text-white text-[10px] font-bold">DEVELOPER</span>
+              </div>
+              <p className="text-sm text-white/80 mt-0.5">
+                Welcome back, <span className="font-semibold text-white">{user.name}</span> — QR badge, tasks, quizzes & payouts
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-slate-400 mt-1">
-            Welcome back, <span className="text-slate-200 font-semibold">{user.name}</span>! Access your QR badge, daily tasks, milestone quizzes, and Lightning payouts.
-          </p>
-        </div>
 
-        {/* Lightning Address Quick Widget */}
-        <form onSubmit={handleUpdateLnAddress} className="flex items-center space-x-2 afr-glass p-2 rounded-xl border-slate-800">
-          <Zap className="w-4 h-4 text-afr-amber ml-2" />
-          <Input
-            type="text"
-            placeholder="user@getalby.com"
-            value={lnAddress}
-            onChange={(e) => setLnAddress(e.target.value)}
-            className="h-8 text-xs font-mono text-afr-amber-light w-48 bg-slate-950/60"
-          />
-          <Button type="submit" variant="amber" size="sm">
-            Save
-          </Button>
-        </form>
+          <div className="space-y-2">
+            <form onSubmit={handleUpdateLnAddress} className="flex items-center space-x-2 bg-white/15 backdrop-blur-md border border-white/20 p-2 rounded-xl">
+              <Zap className="w-4 h-4 text-white ml-2" />
+              <Input
+                type="text"
+                placeholder="user@getalby.com"
+                value={lnAddress}
+                onChange={(e) => setLnAddress(e.target.value)}
+                className="h-8 text-xs font-mono text-white w-48 bg-black/20 border-white/20 placeholder:text-white/50"
+              />
+              <Button type="submit" variant="ghost" size="sm" className="bg-white text-afr-amber hover:bg-slate-100">
+                Save
+              </Button>
+            </form>
+            {lnMsg && (
+              <p className={`text-xs font-mono ${lnMsg.includes("success") ? "text-white" : "text-white/70"}`}>
+                {lnMsg}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {registrations.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent className="space-y-4">
+        <div className="relative overflow-hidden rounded-2xl afr-glass border border-slate-800 p-12 text-center">
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-afr-amber/10 blur-3xl pointer-events-none" />
+          <div className="relative z-10 space-y-4 max-w-md mx-auto">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-afr-amber to-afr-terracotta flex items-center justify-center mx-auto shadow-glow-amber">
+              <Zap className="w-8 h-8 text-white fill-white" />
+            </div>
             <p className="text-slate-400">You are not currently enrolled in any bootcamps.</p>
-            <Button variant="amber" onClick={() => router.push("/")}>
+            <Button variant="amber" className="shadow-glow-amber" onClick={() => router.push("/")}>
               Explore Open Bootcamps
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Dynamic Cryptographic QR Badge */}
+          {/* Left Column: QR Badge — distinct deep-bronze card */}
           <div className="space-y-6">
-            <Card className="afr-card border-slate-800 shadow-glow-amber/10">
-              <CardHeader className="text-center pb-2">
-                <Badge variant="terracotta" className="mx-auto mb-2">
-                  OFFICIAL DEVELOPER BADGE
-                </Badge>
-                <CardTitle>{activeReg?.bootcamp?.title}</CardTitle>
-                <CardDescription className="text-afr-amber-light font-bold">
+            <div className="card-qr p-5 flex flex-col items-center space-y-4">
+              <span className="px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-200 text-[10px] font-bold border border-yellow-500/30">OFFICIAL DEVELOPER BADGE</span>
+                <h3 className="text-lg font-bold text-white text-center">{activeReg?.bootcamp?.title}</h3>
+                <p className="text-xs text-white/80 font-bold">
                   📍 {activeReg?.bootcamp?.city?.country?.name} &bull; {activeReg?.bootcamp?.city?.name}
-                </CardDescription>
-              </CardHeader>
+                </p>
 
-              <CardContent className="flex flex-col items-center space-y-4 pt-2">
-                <div className="relative p-4 rounded-2xl bg-white shadow-glow-amber border-4 border-slate-900">
+                <div className="relative p-4 rounded-2xl bg-white shadow-lg">
                   <QRCodeSVG
                     value={activeReg?.qrToken || "AFR-DEV"}
                     size={200}
@@ -267,15 +277,15 @@ export default function DeveloperPortal() {
                   </div>
                 </div>
 
-                <div className="text-center space-y-1">
-                  <p className="text-xs font-mono text-slate-400">CRYPTOGRAPHIC QR TOKEN</p>
-                  <p className="text-[11px] font-mono text-afr-amber-light bg-slate-950 px-2 py-1 rounded border border-slate-800 break-all">
+                <div className="text-center space-y-1 w-full">
+                  <p className="text-xs font-mono text-white/70">CRYPTOGRAPHIC QR TOKEN</p>
+                  <p className="text-[11px] font-mono text-white bg-black/30 px-2 py-1 rounded border border-white/20 break-all">
                     {activeReg?.qrToken}
                   </p>
                 </div>
 
-                <div className="w-full bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                  <span className="text-xs font-mono text-slate-400 block">5-DAY ATTENDANCE SCAN LOGS</span>
+                <div className="w-full bg-black/30 p-3 rounded-xl border border-yellow-500/20 space-y-2">
+                  <span className="text-xs font-mono text-yellow-200/60 block">5-DAY ATTENDANCE SCAN LOGS</span>
                   <div className="grid grid-cols-5 gap-1.5 text-center">
                     {[1, 2, 3, 4, 5].map((day) => {
                       const log = activeReg?.attendanceLogs?.find((l: any) => l.dayNumber === day);
@@ -284,8 +294,8 @@ export default function DeveloperPortal() {
                           key={day}
                           className={`p-1.5 rounded-lg border text-[11px] font-mono font-bold ${
                             log
-                              ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-glow-emerald"
-                              : "bg-slate-900 border-slate-800 text-slate-600"
+                              ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                              : "bg-yellow-500/5 border-yellow-500/15 text-yellow-200/30"
                           }`}
                         >
                           D{day}
@@ -295,37 +305,32 @@ export default function DeveloperPortal() {
                     })}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
 
-            <Card className="afr-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center space-x-2">
-                  <Trophy className="w-4 h-4 text-afr-amber" />
-                  <span>Satoshi Payout History</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {payouts.length === 0 ? (
-                  <p className="text-xs text-slate-500">No payouts recorded yet.</p>
-                ) : (
-                  payouts.map((p) => (
-                    <div key={p.id} className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-afr-amber-light">{p.amountSats} SATS</span>
-                        <Badge variant={p.status === "PAID" ? "emerald" : "terracotta"}>{p.status}</Badge>
-                      </div>
-                      <p className="text-[10px] font-mono text-slate-500 truncate">Preimage: {p.preimage || "N/A"}</p>
+            <div className="rounded-xl afr-glass border border-slate-800 p-5 space-y-3">
+              <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                <Trophy className="w-4 h-4 text-afr-amber" />
+                <span>Satoshi Payout History</span>
+              </h3>
+              {payouts.length === 0 ? (
+                <p className="text-xs text-slate-500">No payouts recorded yet.</p>
+              ) : (
+                payouts.map((p) => (
+                  <div key={p.id} className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-afr-amber-light">{p.amountSats} SATS</span>
+                      <Badge variant={p.status === "PAID" ? "emerald" : "terracotta"}>{p.status}</Badge>
                     </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+                    <p className="text-[10px] font-mono text-slate-500 truncate">Preimage: {p.preimage || "N/A"}</p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* Right Column: 5-Day Curriculum, Tasks Checklist & Quiz Interface */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center space-x-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 overflow-x-auto">
+            <div className="flex items-center space-x-2 p-1.5 rounded-2xl afr-glass border border-slate-800 overflow-x-auto">
               {[1, 2, 3, 4, 5].map((dayNum) => (
                 <button
                   key={dayNum}
@@ -335,7 +340,7 @@ export default function DeveloperPortal() {
                       ? dayNum === 5
                         ? "bg-afr-terracotta text-white shadow-glow-terracotta"
                         : "bg-afr-amber text-slate-950 shadow-glow-amber"
-                      : "text-slate-400 hover:text-slate-200"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
                   }`}
                 >
                   DAY {dayNum} {dayNum === 5 ? "(HACKATHON)" : ""}
@@ -384,12 +389,12 @@ export default function DeveloperPortal() {
                               onClick={() => toggleTaskCompleted(activeDay, tIdx)}
                               className={`w-full flex items-center space-x-3 p-3 rounded-lg text-xs transition-all border text-left ${
                                 isDone
-                                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300 font-semibold"
+                                  ? "bg-afr-emerald/10 border-afr-emerald/30 text-afr-emerald font-semibold"
                                   : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
                               }`}
                             >
                               {isDone ? (
-                                <CheckSquare className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                                <CheckSquare className="w-4 h-4 text-afr-emerald flex-shrink-0" />
                               ) : (
                                 <Square className="w-4 h-4 text-slate-500 flex-shrink-0" />
                               )}
@@ -418,7 +423,7 @@ export default function DeveloperPortal() {
 
                   <CardContent className="space-y-6">
                     {!quizData?.quizUnlocked ? (
-                      <div className="p-6 rounded-xl bg-slate-950 border border-red-500/30 text-center space-y-3">
+                      <div className="p-6 rounded-xl afr-glass-terracotta text-center space-y-3">
                         <Lock className="w-8 h-8 text-afr-terracotta mx-auto" />
                         <h4 className="text-base font-bold text-slate-200">Quiz Currently Locked</h4>
                         <p className="text-xs text-slate-400 max-w-md mx-auto">
@@ -426,9 +431,9 @@ export default function DeveloperPortal() {
                         </p>
                       </div>
                     ) : !allTasksDone ? (
-                      <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center space-y-3">
+                      <div className="p-6 rounded-xl afr-glass-amber text-center space-y-3">
                         <AlertCircle className="w-8 h-8 text-afr-amber mx-auto" />
-                        <h4 className="text-base font-bold text-amber-300">Complete Daily Tasks First</h4>
+                        <h4 className="text-base font-bold text-afr-amber-light">Complete Daily Tasks First</h4>
                         <p className="text-xs text-slate-300 max-w-md mx-auto">
                           Check off all mandatory tasks in the checklist above before attempting the Day {activeDay} Milestone Quiz.
                         </p>
@@ -499,8 +504,8 @@ export default function DeveloperPortal() {
 
                 <CardContent>
                   {subStatus && (
-                    <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center space-x-2">
-                      <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+                    <div className="mb-4 p-3 rounded-lg afr-glass-emerald text-afr-emerald text-xs flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                       <span>{subStatus}</span>
                     </div>
                   )}
