@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import io, { Socket } from "socket.io-client";
-import { Zap, Camera, Shield, Plus, Trophy, CheckCircle2, AlertCircle, ExternalLink, Star, DollarSign, Users, MapPin, Edit3, X, Lock, Unlock, BookOpen, Save } from "lucide-react";
+import { Zap, Camera, Shield, Plus, Trophy, CheckCircle2, AlertCircle, ExternalLink, Star, DollarSign, Users, MapPin, Edit3, X, Lock, Unlock, BookOpen, Save, Upload } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -101,6 +101,52 @@ export default function OrganizerPortal() {
   const [currDifficulty, setCurrDifficulty] = useState("MEDIUM");
   const [currSaveMsg, setCurrSaveMsg] = useState("");
 
+  // Manage Curriculum Resources State
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [currResources, setCurrResources] = useState<any[]>([]);
+  const [newResType, setNewResType] = useState<"IMAGE" | "VIDEO" | "LINK" | "DOCUMENT">("LINK");
+  const [newResTitle, setNewResTitle] = useState("");
+  const [newResUrl, setNewResUrl] = useState("");
+  const [newResDesc, setNewResDesc] = useState("");
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    let autoType: "IMAGE" | "VIDEO" | "LINK" | "DOCUMENT" = "LINK";
+    if (file.type.startsWith("image/")) autoType = "IMAGE";
+    else if (file.type.startsWith("video/")) autoType = "VIDEO";
+    else if (file.type.includes("pdf") || file.name.endsWith(".pdf") || file.name.endsWith(".doc") || file.name.endsWith(".docx")) autoType = "DOCUMENT";
+
+    setNewResType(autoType);
+    if (!newResTitle) {
+      setNewResTitle(file.name);
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setNewResUrl(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddResource = () => {
+    if (!newResTitle || !newResUrl) return;
+    setCurrResources((prev) => [
+      ...prev,
+      { type: newResType, title: newResTitle, url: newResUrl, description: newResDesc },
+    ]);
+    setNewResTitle("");
+    setNewResUrl("");
+    setNewResDesc("");
+  };
+
+  const handleRemoveResource = (index: number) => {
+    setCurrResources((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
   // Scanner State
   const [scanDay, setScanDay] = useState<number>(1);
   const [scanResult, setScanResult] = useState<any>(null);
@@ -116,6 +162,44 @@ export default function OrganizerPortal() {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [payoutAmounts, setPayoutAmounts] = useState<{ [subId: string]: number }>({});
   const [payoutLogs, setPayoutLogs] = useState<{ [subId: string]: any }>({});
+  const [organizerPayouts, setOrganizerPayouts] = useState<any[]>([]);
+  const [settleLoading, setSettleLoading] = useState<{ [id: string]: boolean }>({});
+  const [manualPreimages, setManualPreimages] = useState<{ [id: string]: string }>({});
+
+  const fetchBootcampPayouts = async (bootcampId: string, token?: string) => {
+    const authToken = token || localStorage.getItem("afr_token");
+    try {
+      const res = await axios.get(`http://localhost:4000/api/payouts/bootcamp/${bootcampId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      setOrganizerPayouts(res.data || []);
+    } catch (e) {}
+  };
+
+  const handleSettleInvoice = async (payout: any, customPreimage?: string) => {
+    const token = localStorage.getItem("afr_token");
+    setSettleLoading((prev) => ({ ...prev, [payout.id]: true }));
+    try {
+      await axios.post(
+        "http://localhost:4000/api/payouts/process",
+        {
+          developerId: payout.developerId,
+          bootcampId: payout.bootcampId,
+          amountSats: payout.amountSats,
+          lightningAddress: payout.lightningAddress,
+          bolt11Invoice: payout.bolt11,
+          customPreimage: customPreimage || manualPreimages[payout.id],
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(`⚡ Payout of ${payout.amountSats} Sats to ${payout.lightningAddress} settled successfully!`);
+      if (selectedBootcampId) fetchBootcampPayouts(selectedBootcampId, token!);
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to settle Lightning payout.");
+    } finally {
+      setSettleLoading((prev) => ({ ...prev, [payout.id]: false }));
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("afr_token");
@@ -147,6 +231,7 @@ export default function OrganizerPortal() {
         const initialId = selectedBootcampId || res.data[0].id;
         setSelectedBootcampId(initialId);
         fetchSubmissions(initialId, authToken);
+        fetchBootcampPayouts(initialId, authToken);
         setupWebSocket(initialId, 1);
 
         const currentBootcamp = res.data.find((b: any) => b.id === initialId) || res.data[0];
@@ -292,11 +377,13 @@ export default function OrganizerPortal() {
         setCurrContent(d.contentMarkdown || "");
         setCurrTasks((d.tasks || []).join("\n"));
         setCurrDifficulty(d.quizDifficulty || "MEDIUM");
+        setCurrResources(d.resources || []);
       } else {
         setCurrTitle(`Day ${dayNum} Curriculum`);
         setCurrContent("");
         setCurrTasks("");
         setCurrDifficulty("MEDIUM");
+        setCurrResources([]);
       }
     }
   };
@@ -316,6 +403,7 @@ export default function OrganizerPortal() {
           title: currTitle,
           contentMarkdown: currContent,
           tasks: tasksArray,
+          resources: currResources,
           quizDifficulty: currDifficulty,
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -350,7 +438,7 @@ export default function OrganizerPortal() {
       );
       fetchBootcamps(token);
     } catch (err: any) {
-      alert("Failed to update quiz status.");
+      alert(err.response?.data?.message || "Failed to update quiz status.");
     }
   };
 
@@ -383,9 +471,19 @@ export default function OrganizerPortal() {
     } catch (e) {}
   };
 
+  useEffect(() => {
+    if (!selectedBootcampId) return;
+    fetchBootcampPayouts(selectedBootcampId);
+    const interval = setInterval(() => {
+      fetchBootcampPayouts(selectedBootcampId);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [selectedBootcampId]);
+
   const handleBootcampSelect = (bId: string) => {
     setSelectedBootcampId(bId);
     fetchSubmissions(bId);
+    fetchBootcampPayouts(bId);
     setupWebSocket(bId, leaderboardDay);
 
     const target = bootcamps.find((b) => b.id === bId);
@@ -551,41 +649,205 @@ export default function OrganizerPortal() {
         </div>
       </div>
 
-      {/* Organizer Quiz Unlock Control Toolbar */}
+      {/* Organizer Live Quiz & Timer Controller Grid */}
       {currentBootcamp && (
         <Card className="afr-glass border-slate-800">
-          <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <h4 className="font-bold text-sm text-white flex items-center space-x-2">
-                <Lock className="w-4 h-4 text-afr-amber" />
-                <span>Daily Quiz Unlock Controller</span>
-              </h4>
-              <p className="text-xs text-slate-400">
-                Quizzes are hidden by default. Click to unlock/publish milestone quizzes for developers after they complete daily tasks.
-              </p>
+          <CardHeader className="pb-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-base flex items-center space-x-2">
+                  <Trophy className="w-4 h-4 text-afr-amber" />
+                  <span>Daily Quiz Live Controller & Timed Window Manager</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Set the quiz time limit and click <strong className="text-emerald-400">Start Quiz</strong> to publish the milestone quiz and start the live timer for developers, or <strong className="text-afr-terracotta-warm">Stop Quiz</strong> to lock access.
+                </CardDescription>
+              </div>
+              <Badge variant="amber">ORGANIZER CONTROL PANEL</Badge>
             </div>
+          </CardHeader>
 
-            <div className="flex items-center space-x-2">
+          <CardContent className="pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((dNum) => {
                 const dayObj = currentCurriculum.find((c) => c.day === dNum) || { quizUnlocked: false };
                 const isUnlocked = Boolean(dayObj.quizUnlocked);
+                const currentLimit = selectedQuizTimeLimits[dNum] || dayObj.timeLimitMinutes || 10;
+
                 return (
-                  <button
+                  <div
                     key={dNum}
-                    type="button"
-                    onClick={() => handleToggleQuizUnlock(dNum, isUnlocked)}
-                    className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all border ${
+                    className={`p-4 rounded-xl border space-y-3 transition-all ${
                       isUnlocked
-                        ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-glow-emerald"
-                        : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                        ? "bg-emerald-950/20 border-emerald-500/40 shadow-glow-emerald"
+                        : "bg-slate-950 border-slate-800"
                     }`}
                   >
-                    {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                    <span>Day {dNum} {isUnlocked ? "Published" : "Locked"}</span>
-                  </button>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-xs text-white">DAY {dNum} QUIZ</span>
+                      <Badge variant={isUnlocked ? "emerald" : "terracotta"}>
+                        {isUnlocked ? "LIVE NOW" : "STOPPED / LOCKED"}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-mono text-slate-400 uppercase">
+                        Timer Duration:
+                      </label>
+                      <select
+                        value={currentLimit}
+                        onChange={(e) =>
+                          setSelectedQuizTimeLimits((prev) => ({
+                            ...prev,
+                            [dNum]: Number(e.target.value),
+                          }))
+                        }
+                        disabled={isUnlocked}
+                        className="w-full h-8 px-2 rounded border border-slate-800 bg-slate-900 text-xs font-mono text-slate-200 disabled:opacity-60"
+                      >
+                        <option value={5}>5 Minutes</option>
+                        <option value={10}>10 Minutes</option>
+                        <option value={15}>15 Minutes</option>
+                        <option value={30}>30 Minutes</option>
+                        <option value={60}>60 Minutes</option>
+                      </select>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant={isUnlocked ? "outline" : "amber"}
+                      size="sm"
+                      onClick={() => handleToggleQuizUnlock(dNum, !isUnlocked, currentLimit)}
+                      className="w-full text-xs font-mono font-bold"
+                    >
+                      {isUnlocked ? (
+                        <>
+                          <Lock className="w-3.5 h-3.5 mr-1 text-afr-terracotta" />
+                          <span>Stop & Lock Quiz</span>
+                        </>
+                      ) : (
+                        <>
+                          <Unlock className="w-3.5 h-3.5 mr-1" />
+                          <span>Start Quiz ({currentLimit}m Timer)</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pending Winner Lightning Invoices Card */}
+      {currentBootcamp && (
+        <Card className="afr-glass border-amber-500/40 shadow-glow-amber/10">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Zap className="w-5 h-5 text-afr-amber fill-afr-amber" />
+                <CardTitle className="text-base text-white">
+                  Pending Winner Payout Invoices ({organizerPayouts.filter((p) => p.status === "PENDING").length})
+                </CardTitle>
+              </div>
+              <Badge variant="amber">LIGHTNING DISPATCHER</Badge>
+            </div>
+            <CardDescription className="text-xs text-slate-400">
+              Review winner invoices submitted by Top 3 developers. Copy the BOLT11 invoice to pay directly inside Polar (Node Alice), or click <strong>Auto Pay</strong> for node settlement.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-3 pt-2">
+            {organizerPayouts.filter((p) => p.status === "PENDING").length === 0 ? (
+              <div className="p-6 text-center rounded-xl bg-slate-950/60 border border-slate-800 space-y-1">
+                <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto" />
+                <p className="text-xs text-slate-300 font-medium">No pending winner payout invoices.</p>
+                <p className="text-[10px] text-slate-500 font-mono">Top 3 winner invoices will automatically appear here once quizzes end.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {organizerPayouts
+                  .filter((p) => p.status === "PENDING")
+                  .map((payout) => (
+                    <div
+                      key={payout.id}
+                      className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-900 pb-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-white text-sm">{payout.developer?.name || payout.developerId}</span>
+                            <Badge variant="amber" className="font-mono text-[10px]">
+                              {payout.amountSats} SATS PRIZE
+                            </Badge>
+                          </div>
+                          <p className="text-xs font-mono text-afr-amber underline">{payout.lightningAddress}</p>
+                        </div>
+
+                        {payout.bolt11 && (
+                          <Button
+                            type="button"
+                            variant="glass"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(payout.bolt11);
+                              alert("⚡ BOLT11 invoice copied to clipboard! Paste it into Polar (Alice -> Pay Invoice).");
+                            }}
+                            className="text-xs font-mono text-slate-300 border-slate-700 hover:border-afr-amber shrink-0"
+                          >
+                            📋 Copy BOLT11 Invoice for Polar
+                          </Button>
+                        )}
+                      </div>
+
+                      {payout.bolt11 && (
+                        <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 space-y-1">
+                          <span className="text-[10px] font-mono text-slate-400 block uppercase">BOLT11 Payment Request String:</span>
+                          <p className="text-[10px] font-mono text-afr-amber-light break-all bg-slate-950 p-2 rounded border border-slate-800 select-all">
+                            {payout.bolt11}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+                        <Button
+                          type="button"
+                          variant="amber"
+                          disabled={settleLoading[payout.id]}
+                          onClick={() => handleSettleInvoice(payout)}
+                          className="font-mono font-bold text-xs shrink-0 shadow-glow-amber h-9"
+                        >
+                          <Zap className="w-4 h-4 mr-1.5 fill-slate-950" />
+                          {settleLoading[payout.id] ? "Settling Payment..." : `⚡ Auto-Pay ${payout.amountSats} Sats (LND Node)`}
+                        </Button>
+
+                        <div className="flex items-center space-x-2 w-full md:w-auto">
+                          <Input
+                            type="text"
+                            placeholder="Polar Proof Preimage (Hex)..."
+                            value={manualPreimages[payout.id] || ""}
+                            onChange={(e) =>
+                              setManualPreimages((prev) => ({ ...prev, [payout.id]: e.target.value }))
+                            }
+                            className="h-9 text-xs font-mono min-w-[220px]"
+                          />
+                          <Button
+                            type="button"
+                            variant="emerald"
+                            size="sm"
+                            disabled={!manualPreimages[payout.id] || settleLoading[payout.id]}
+                            onClick={() => handleSettleInvoice(payout, manualPreimages[payout.id])}
+                            className="h-9 text-xs font-mono font-bold shrink-0"
+                          >
+                            Mark Paid
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -925,6 +1187,135 @@ export default function OrganizerPortal() {
                   placeholder="Understand Payment Channels&#10;Set up LND node&#10;Verify invoice"
                   className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs text-slate-100"
                 />
+              </div>
+
+              {/* Media Attachments & Learning Resources Section */}
+              <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-mono font-bold text-slate-200 uppercase flex items-center space-x-1.5">
+                    <ExternalLink className="w-4 h-4 text-afr-amber" />
+                    <span>Media Attachments & Learning Resources ({currResources.length})</span>
+                  </h4>
+                  <span className="text-[10px] text-slate-400">Photos, Videos, Spec Links & Docs</span>
+                </div>
+
+                {/* List of Attached Resources */}
+                {currResources.length > 0 && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {currResources.map((res, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 text-xs"
+                      >
+                        <div className="flex items-center space-x-2.5 overflow-hidden">
+                          <Badge
+                            variant={
+                              res.type === "IMAGE"
+                                ? "amber"
+                                : res.type === "VIDEO"
+                                ? "terracotta"
+                                : "emerald"
+                            }
+                            className="text-[9px] font-mono shrink-0"
+                          >
+                            {res.type}
+                          </Badge>
+                          <div className="truncate">
+                            <p className="font-bold text-white text-xs truncate">{res.title}</p>
+                            <a
+                              href={res.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] text-afr-amber underline truncate block"
+                            >
+                              {res.url}
+                            </a>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveResource(idx)}
+                          className="text-slate-400 hover:text-red-400 p-1 shrink-0"
+                          title="Remove Resource"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Hidden File Input for Device Uploads */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/*,video/*,application/pdf,.doc,.docx"
+                  className="hidden"
+                />
+
+                {/* New Resource Add Form */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-2 border-t border-slate-800/80">
+                  <div className="sm:col-span-3">
+                    <select
+                      value={newResType}
+                      onChange={(e: any) => setNewResType(e.target.value)}
+                      className="w-full h-9 px-2 rounded-lg border border-slate-800 bg-slate-900 text-xs font-mono text-slate-200"
+                    >
+                      <option value="IMAGE">📷 Photo / Diagram</option>
+                      <option value="VIDEO">🎥 Video (YouTube/MP4)</option>
+                      <option value="LINK">🔗 Web Link / Spec</option>
+                      <option value="DOCUMENT">📄 PDF / Document</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-4">
+                    <Input
+                      placeholder="Title (e.g. LND Arch)"
+                      value={newResTitle}
+                      onChange={(e) => setNewResTitle(e.target.value)}
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-5">
+                    <Input
+                      placeholder={newResUrl.startsWith("data:") ? "File Loaded from Device ✓" : "URL (https://...) or choose file below"}
+                      value={newResUrl}
+                      onChange={(e) => setNewResUrl(e.target.value)}
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-8 text-xs font-mono text-afr-amber border border-afr-amber/40 hover:bg-afr-amber/10"
+                    >
+                      <Upload className="w-3.5 h-3.5 mr-1" />
+                      <span>Choose File from Device</span>
+                    </Button>
+                    <Input
+                      placeholder="Short Description (optional)"
+                      value={newResDesc}
+                      onChange={(e) => setNewResDesc(e.target.value)}
+                      className="h-8 text-xs max-w-xs"
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddResource}
+                    className="h-8 text-xs font-mono"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Attachment
+                  </Button>
+                </div>
               </div>
 
               <div>

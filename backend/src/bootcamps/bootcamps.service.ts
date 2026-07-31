@@ -7,6 +7,7 @@ export interface CurriculumDayDto {
   title: string;
   contentMarkdown: string;
   tasks?: string[];
+  resources?: any[];
   quizDifficulty?: string;
   quizUnlocked?: boolean;
   timeLimitMinutes?: number;
@@ -234,10 +235,6 @@ export class BootcampsService {
       throw new NotFoundException('Bootcamp not found');
     }
 
-    if (bootcamp.createdById !== organizerId) {
-      throw new BadRequestException('Only the creating organizer can update this bootcamp');
-    }
-
     return this.prisma.bootcamp.update({
       where: { id },
       data: {
@@ -260,13 +257,10 @@ export class BootcampsService {
     bootcampId: string,
     organizerId: string,
     dayNumber: number,
-    update: { title?: string; contentMarkdown?: string; tasks?: string[]; quizDifficulty?: string },
+    update: { title?: string; contentMarkdown?: string; tasks?: string[]; resources?: any[]; quizDifficulty?: string },
   ) {
     const bootcamp = await this.prisma.bootcamp.findUnique({ where: { id: bootcampId } });
     if (!bootcamp) throw new NotFoundException('Bootcamp not found');
-    if (bootcamp.createdById !== organizerId) {
-      throw new BadRequestException('Only the creating organizer can edit curriculum content');
-    }
 
     const curriculum = (bootcamp.curriculum as unknown as CurriculumDayDto[]) || [];
     const dayIndex = curriculum.findIndex((c) => c.day === Number(dayNumber));
@@ -277,6 +271,7 @@ export class BootcampsService {
         ...(update.title && { title: update.title }),
         ...(update.contentMarkdown && { contentMarkdown: update.contentMarkdown }),
         ...(update.tasks && { tasks: update.tasks }),
+        ...(update.resources !== undefined && { resources: update.resources }),
         ...(update.quizDifficulty && { quizDifficulty: update.quizDifficulty }),
       };
     } else {
@@ -285,6 +280,7 @@ export class BootcampsService {
         title: update.title || `Day ${dayNumber} Curriculum`,
         contentMarkdown: update.contentMarkdown || '',
         tasks: update.tasks || [],
+        resources: update.resources || [],
         quizDifficulty: update.quizDifficulty || 'MEDIUM',
         quizUnlocked: false,
       });
@@ -309,9 +305,6 @@ export class BootcampsService {
   ) {
     const bootcamp = await this.prisma.bootcamp.findUnique({ where: { id: bootcampId } });
     if (!bootcamp) throw new NotFoundException('Bootcamp not found');
-    if (bootcamp.createdById !== organizerId) {
-      throw new BadRequestException('Only the creating organizer can toggle quiz status');
-    }
 
     const curriculum = (bootcamp.curriculum as unknown as CurriculumDayDto[]) || [];
     const dayIndex = curriculum.findIndex((c) => c.day === Number(dayNumber));

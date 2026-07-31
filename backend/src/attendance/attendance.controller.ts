@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
 import { AttendanceService } from './attendance.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -6,7 +7,12 @@ import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client';
 
 export class ScanAttendanceDto {
+  @IsString()
+  @IsNotEmpty()
   qrToken: string;
+
+  @IsNumber()
+  @IsNotEmpty()
   dayNumber: number;
 }
 

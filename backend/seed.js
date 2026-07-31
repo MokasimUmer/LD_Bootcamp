@@ -98,6 +98,31 @@ async function main() {
   }
 
   console.log(`SUCCESS: Seeded ${countryCount} African countries and ${cityCount} cities to database.`);
+
+  console.log('Seeding known hardcoded organizer accounts...');
+  const bcrypt = require('bcrypt');
+  const salt = await bcrypt.genSalt(10);
+
+  const knownOrganizers = [
+    { email: 'organizer@afr.lightning', password: 'Organizer123!', name: 'AFR Lead Organizer', role: 'ORGANIZER' },
+    { email: 'admin@afr.lightning', password: 'Admin123!', name: 'AFR Master Admin', role: 'ADMIN' },
+  ];
+
+  for (const org of knownOrganizers) {
+    const hash = await bcrypt.hash(org.password, salt);
+    await prisma.user.upsert({
+      where: { email: org.email },
+      update: { role: org.role },
+      create: {
+        email: org.email,
+        passwordHash: hash,
+        name: org.name,
+        role: org.role,
+        lightningAddress: `${org.role.toLowerCase()}@getalby.com`,
+      },
+    });
+  }
+  console.log('SUCCESS: Seeded known organizer credentials (organizer@afr.lightning & admin@afr.lightning).');
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());

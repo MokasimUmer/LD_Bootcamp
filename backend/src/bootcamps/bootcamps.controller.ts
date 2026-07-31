@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { IsString, IsNotEmpty, IsNumber, IsBoolean, IsOptional, IsArray } from 'class-validator';
 import { BootcampsService } from './bootcamps.service';
 import { CreateBootcampDto, UpdateBootcampDto } from './dto/bootcamp.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -7,15 +8,38 @@ import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client';
 
 export class UpdateDayCurriculumDto {
+  @IsString()
+  @IsOptional()
   title?: string;
+
+  @IsString()
+  @IsOptional()
   contentMarkdown?: string;
+
+  @IsArray()
+  @IsOptional()
   tasks?: string[];
+
+  @IsArray()
+  @IsOptional()
+  resources?: any[];
+
+  @IsString()
+  @IsOptional()
   quizDifficulty?: string;
 }
 
 export class ToggleQuizUnlockDto {
+  @IsNumber()
+  @IsNotEmpty()
   dayNumber: number;
+
+  @IsBoolean()
+  @IsNotEmpty()
   unlocked: boolean;
+
+  @IsNumber()
+  @IsOptional()
   timeLimitMinutes?: number;
 }
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { Zap, Award, QrCode, BookOpen, CheckCircle2, Trophy, Send, Edit3, AlertCircle, ArrowRight, Shield, Lock, CheckSquare, Square } from "lucide-react";
+import { Zap, Award, QrCode, BookOpen, CheckCircle2, Trophy, Send, Edit3, AlertCircle, ArrowRight, Shield, Lock, CheckSquare, Square, ExternalLink } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -23,6 +23,16 @@ export default function DeveloperPortal() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [qId: number]: number }>({});
   const [quizResult, setQuizResult] = useState<any>(null);
   const [quizLoading, setQuizLoading] = useState(false);
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (timeLeftSeconds === null || timeLeftSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeftSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeftSeconds]);
 
   // Day 5 Submission Form
   const [githubUrl, setGithubUrl] = useState("");
@@ -58,6 +68,15 @@ export default function DeveloperPortal() {
     fetchMyPayouts(token);
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("afr_token");
+    if (!token) return;
+    const interval = setInterval(() => {
+      fetchMyPayouts(token);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchRegistrations = async (token: string) => {
     try {
       const res = await axios.get("http://localhost:4000/api/registrations/my-registrations", {
@@ -80,6 +99,13 @@ export default function DeveloperPortal() {
     } catch (e) {}
   };
 
+  const fetchLeaderboard = async (bootcampId: string, dayNum: number) => {
+    try {
+      const res = await axios.get(`http://localhost:4000/api/quiz/leaderboard/${bootcampId}/day/${dayNum}`);
+      setLeaderboard(res.data || []);
+    } catch (e) {}
+  };
+
   const fetchQuiz = async (bootcampId: string, dayNum: number, token?: string) => {
     setQuizLoading(true);
     setQuizResult(null);
@@ -90,8 +116,15 @@ export default function DeveloperPortal() {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setQuizData(res.data);
+      if (res.data?.timeRemainingSeconds !== undefined) {
+        setTimeLeftSeconds(res.data.timeRemainingSeconds);
+      } else {
+        setTimeLeftSeconds(null);
+      }
+      fetchLeaderboard(bootcampId, dayNum);
     } catch (e) {
       setQuizData(null);
+      setTimeLeftSeconds(null);
     } finally {
       setQuizLoading(false);
     }
@@ -138,6 +171,9 @@ export default function DeveloperPortal() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setQuizResult(res.data);
+      if (activeReg) {
+        fetchLeaderboard(activeReg.bootcampId, activeDay);
+      }
     } catch (err: any) {
       alert(err.response?.data?.message || "Quiz submission failed.");
     }
@@ -179,6 +215,37 @@ export default function DeveloperPortal() {
       setLnMsg("Lightning Address saved successfully!");
     } catch (e) {
       setLnMsg("Failed to update Lightning Address.");
+    }
+  };
+
+  // Lightning Winner Claim State
+  const [claimLoading, setClaimLoading] = useState(false);
+  const [claimResult, setClaimResult] = useState<any>(null);
+  const [customBolt11, setCustomBolt11] = useState("");
+
+  const handleClaimWinnerPrize = async () => {
+    if (!activeReg) return;
+    const token = localStorage.getItem("afr_token");
+    setClaimLoading(true);
+    setClaimResult(null);
+
+    try {
+      const res = await axios.post(
+        "http://localhost:4000/api/payouts/claim-winner",
+        {
+          bootcampId: activeReg.bootcampId,
+          dayNumber: activeDay,
+          lightningAddress: lnAddress,
+          bolt11Invoice: customBolt11,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setClaimResult(res.data);
+      fetchMyPayouts(token);
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to claim prize payout.");
+    } finally {
+      setClaimLoading(false);
     }
   };
 
@@ -363,6 +430,98 @@ export default function DeveloperPortal() {
                       {currentDayModule.contentMarkdown}
                     </div>
 
+                    {/* Media Attachments & Learning Resources Gallery */}
+                    {currentDayModule.resources && currentDayModule.resources.length > 0 && (
+                      <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-xs font-mono text-afr-amber uppercase flex items-center space-x-1.5">
+                            <ExternalLink className="w-4 h-4 text-afr-amber" />
+                            <span>Day {activeDay} Learning Resources & Media ({currentDayModule.resources.length})</span>
+                          </h4>
+                          <span className="text-[10px] text-slate-400 font-mono">Curated by Organizers</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {currentDayModule.resources.map((res: any, idx: number) => {
+                            if (res.type === "IMAGE") {
+                              return (
+                                <div key={idx} className="p-3 rounded-lg border border-slate-800 bg-slate-900 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-white truncate">{res.title}</span>
+                                    <Badge variant="amber" className="text-[9px]">PHOTO</Badge>
+                                  </div>
+                                  <div className="overflow-hidden rounded-md border border-slate-800 bg-slate-950 max-h-48 flex items-center justify-center">
+                                    <img src={res.url} alt={res.title} className="w-full object-cover max-h-48" />
+                                  </div>
+                                  {res.description && <p className="text-[11px] text-slate-400">{res.description}</p>}
+                                </div>
+                              );
+                            }
+
+                            if (res.type === "VIDEO") {
+                              const isYoutube = res.url.includes("youtube.com") || res.url.includes("youtu.be");
+                              let embedUrl = res.url;
+                              if (isYoutube) {
+                                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                                const match = res.url.match(regExp);
+                                if (match && match[2].length === 11) {
+                                  embedUrl = `https://www.youtube.com/embed/${match[2]}`;
+                                }
+                              }
+
+                              return (
+                                <div key={idx} className="p-3 rounded-lg border border-slate-800 bg-slate-900 space-y-2 md:col-span-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-white truncate">{res.title}</span>
+                                    <Badge variant="terracotta" className="text-[9px]">VIDEO TUTORIAL</Badge>
+                                  </div>
+                                  {isYoutube ? (
+                                    <div className="aspect-video w-full rounded-md overflow-hidden border border-slate-800">
+                                      <iframe
+                                        src={embedUrl}
+                                        title={res.title}
+                                        className="w-full h-full"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                      />
+                                    </div>
+                                  ) : (
+                                    <a
+                                      href={res.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="flex items-center justify-between p-3 rounded-md bg-slate-950 border border-slate-800 text-xs text-afr-amber hover:underline"
+                                    >
+                                      <span>Watch Video: {res.title}</span>
+                                      <ExternalLink className="w-4 h-4" />
+                                    </a>
+                                  )}
+                                  {res.description && <p className="text-[11px] text-slate-400">{res.description}</p>}
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <a
+                                key={idx}
+                                href={res.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-3 rounded-lg border border-slate-800 bg-slate-900 hover:border-slate-700 transition-all block space-y-1 group"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-white group-hover:text-afr-amber truncate">{res.title}</span>
+                                  <Badge variant="emerald" className="text-[9px]">{res.type}</Badge>
+                                </div>
+                                <p className="text-[10px] font-mono text-afr-amber underline truncate">{res.url}</p>
+                                {res.description && <p className="text-[11px] text-slate-400">{res.description}</p>}
+                              </a>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Interactive Daily Task Checklist */}
                     <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
                       <div className="flex items-center justify-between">
@@ -410,9 +569,16 @@ export default function DeveloperPortal() {
                         <Trophy className="w-5 h-5 text-afr-amber" />
                         <span>Day {activeDay} Milestone Quiz</span>
                       </CardTitle>
-                      {quizData?.quizUnlocked && (
-                        <Badge variant="emerald">UNLOCKED BY ORGANIZER</Badge>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        {quizData?.quizUnlocked && !quizData?.hasCompleted && !quizResult && timeLeftSeconds !== null && (
+                          <Badge variant={timeLeftSeconds > 60 ? "amber" : "terracotta"} className="font-mono">
+                            ⏱ {Math.floor(timeLeftSeconds / 60)}:{(timeLeftSeconds % 60).toString().padStart(2, '0')}
+                          </Badge>
+                        )}
+                        {quizData?.quizUnlocked && (
+                          <Badge variant="emerald">UNLOCKED BY ORGANIZER</Badge>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
 
@@ -433,16 +599,39 @@ export default function DeveloperPortal() {
                           Check off all mandatory tasks in the checklist above before attempting the Day {activeDay} Milestone Quiz.
                         </p>
                       </div>
+                    ) : quizData?.hasCompleted ? (
+                      <div className="p-6 rounded-xl bg-slate-950 border border-emerald-500/40 space-y-3 text-center">
+                        <Badge variant="emerald" className="mx-auto">
+                          QUIZ COMPLETED
+                        </Badge>
+                        <h3 className="text-3xl font-black font-display text-emerald-400">
+                          {quizData.completedScore} / {quizData.maxScore} POINTS ({quizData.percentage}%)
+                        </h3>
+                        <p className="text-xs text-slate-400 font-mono">
+                          Completed on {new Date(quizData.completedAt).toLocaleDateString()}
+                        </p>
+                        <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
+                          Your score is recorded in Redis Sorted Sets and published to the live arcade leaderboard!
+                        </div>
+                      </div>
                     ) : quizResult ? (
                       <div className="p-4 rounded-xl bg-slate-950 border border-afr-amber/40 space-y-3 text-center">
                         <Badge variant="emerald" className="mx-auto">
                           QUIZ COMPLETED
                         </Badge>
                         <h3 className="text-3xl font-black font-display text-afr-amber-light">
-                          {quizResult.score} / {quizResult.maxScore} POINTS
+                          {quizResult.score} / {quizResult.maxScore} POINTS ({quizResult.percentage}%)
                         </h3>
                         <p className="text-xs text-slate-400 font-mono">
                           Score updated in Redis Sorted Set & broadcast to live leaderboard!
+                        </p>
+                      </div>
+                    ) : timeLeftSeconds === 0 ? (
+                      <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/30 text-center space-y-3">
+                        <AlertCircle className="w-8 h-8 text-red-400 mx-auto" />
+                        <h4 className="text-base font-bold text-red-300">Quiz Timed Window Expired</h4>
+                        <p className="text-xs text-slate-300 max-w-md mx-auto">
+                          The timed quiz window for Day {activeDay} has expired. Please contact your bootcamp organizer if you need extra time.
                         </p>
                       </div>
                     ) : (
@@ -471,7 +660,7 @@ export default function DeveloperPortal() {
                       ))
                     )}
 
-                    {quizData?.quizUnlocked && allTasksDone && !quizResult && (
+                    {quizData?.quizUnlocked && allTasksDone && !quizData?.hasCompleted && !quizResult && timeLeftSeconds !== 0 && (
                       <Button
                         variant="amber"
                         size="lg"
@@ -480,6 +669,158 @@ export default function DeveloperPortal() {
                       >
                         Submit Day {activeDay} Quiz Answers
                       </Button>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Top 3 Quiz Winner Lightning Invoice & Payout Claim Widget */}
+                {(() => {
+                  const myRankIndex = leaderboard.findIndex(
+                    (item: any) => item.developerId === user?.id || item.developer?.id === user?.id
+                  );
+                  const myRank = myRankIndex >= 0 ? myRankIndex + 1 : null;
+                  if (myRank === null || myRank > 3) return null;
+
+                  const prizeSats = myRank === 1 ? 10000 : myRank === 2 ? 5000 : 2500;
+                  const isQuizStillActive = quizData ? Boolean(quizData.quizUnlocked) : Boolean(currentDayModule.quizUnlocked);
+
+                  return (
+                    <Card className="afr-glass border-emerald-500/50 shadow-glow-emerald">
+                      <CardHeader className="pb-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center space-x-2">
+                            <Trophy className="w-5 h-5 text-afr-amber" />
+                            <CardTitle className="text-base text-emerald-300">
+                              🏆 CONGRATULATIONS! YOU PLACED #{myRank} IN DAY {activeDay} QUIZ!
+                            </CardTitle>
+                          </div>
+                          <Badge variant="emerald" className="font-mono w-fit">
+                            {myRank === 1 ? "🥇 1ST PLACE - 10,000 SATS" : myRank === 2 ? "🥈 2ND PLACE - 5,000 SATS" : "🥉 3RD PLACE - 2,500 SATS"}
+                          </Badge>
+                        </div>
+                        <CardDescription className="text-xs text-slate-300">
+                          You qualify for a Top 3 Lightning Network prize! Once the quiz timer ends and final standings are locked by the organizer, generate your invoice below.
+                        </CardDescription>
+                      </CardHeader>
+
+                      <CardContent className="space-y-4 pt-2">
+                        {isQuizStillActive ? (
+                          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center space-y-2">
+                            <Badge variant="amber" className="mx-auto">QUIZ STILL LIVE</Badge>
+                            <p className="text-xs text-amber-200 font-medium">
+                              ⏳ The Day {activeDay} quiz is currently live for other participants!
+                            </p>
+                            <p className="text-[11px] text-slate-400 font-mono">
+                              Invoice generation opens as soon as the organizer stops the quiz to lock final leaderboard ranks.
+                            </p>
+                          </div>
+                        ) : claimResult ? (
+                          <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/50 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-emerald-300 text-sm flex items-center space-x-1.5">
+                                <Zap className="w-4 h-4 text-afr-amber fill-afr-amber" />
+                                <span>
+                                  {claimResult.alreadyClaimed
+                                    ? "Prize Previously Settled"
+                                    : claimResult.pending
+                                    ? "Invoice Submitted & Pending Organizer Payout!"
+                                    : "Lightning Payout Settled!"}
+                                </span>
+                              </span>
+                              <Badge variant={claimResult.pending ? "amber" : "emerald"}>
+                                {claimResult.pending ? "PENDING ORGANIZER APPROVAL ⚡" : "PAID ⚡"}
+                              </Badge>
+                            </div>
+                            <p className="text-xs font-mono text-slate-300">
+                              Amount: <strong className="text-afr-amber">{claimResult.amountSats || prizeSats} SATS</strong> | Destination: <span className="underline">{claimResult.lightningAddress}</span>
+                            </p>
+                            <p className="text-[11px] text-slate-400 font-mono">
+                              {claimResult.message}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">
+                                  Your Lightning Wallet / Address (LNURL)
+                                </label>
+                                <Input
+                                  type="text"
+                                  placeholder="developer@getalby.com"
+                                  value={lnAddress}
+                                  onChange={(e) => setLnAddress(e.target.value)}
+                                  className="h-9 text-xs font-mono text-afr-amber-light"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">
+                                  Custom BOLT11 Invoice (Optional)
+                                </label>
+                                <Input
+                                  type="text"
+                                  placeholder="lnbc100u1p..."
+                                  value={customBolt11}
+                                  onChange={(e) => setCustomBolt11(e.target.value)}
+                                  className="h-9 text-xs font-mono"
+                                />
+                              </div>
+                            </div>
+
+                            <Button
+                              type="button"
+                              variant="amber"
+                              disabled={claimLoading}
+                              onClick={handleClaimWinnerPrize}
+                              className="w-full text-xs font-mono font-bold h-10 shadow-glow-amber"
+                            >
+                              <Zap className="w-4 h-4 mr-1.5 fill-slate-950" />
+                              {claimLoading
+                                ? "Submitting Invoice to Organizer Portal..."
+                                : `⚡ Generate & Submit ${prizeSats.toLocaleString()} Sats Invoice to Organizer`}
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
+
+                {/* Day Live Leaderboard Table */}
+                <Card className="afr-card border-slate-800">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center space-x-2">
+                        <Trophy className="w-4 h-4 text-afr-amber" />
+                        <span>Day {activeDay} Live Arcade Leaderboard</span>
+                      </CardTitle>
+                      <Badge variant="live">LIVE REDIS RANKINGS</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {leaderboard.length === 0 ? (
+                      <p className="text-xs text-slate-500 py-4 text-center">No scores recorded for Day {activeDay} yet. Be the first to submit!</p>
+                    ) : (
+                      <div className="divide-y divide-slate-800/60">
+                        {leaderboard.map((entry: any) => (
+                          <div key={entry.developerId} className="py-2 flex items-center justify-between text-xs">
+                            <div className="flex items-center space-x-3">
+                              <span className={`font-mono font-bold w-6 h-6 rounded flex items-center justify-center text-[11px] ${
+                                entry.rank === 1 ? "bg-amber-500 text-slate-950" : entry.rank === 2 ? "bg-slate-300 text-slate-950" : entry.rank === 3 ? "bg-amber-700 text-white" : "bg-slate-900 text-slate-400"
+                              }`}>
+                                #{entry.rank}
+                              </span>
+                              <div>
+                                <p className="font-semibold text-slate-200">{entry.name}</p>
+                                {entry.lightningAddress && (
+                                  <p className="text-[10px] font-mono text-afr-amber-light">{entry.lightningAddress}</p>
+                                )}
+                              </div>
+                            </div>
+                            <span className="font-mono font-bold text-afr-amber">{entry.score} pts</span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </CardContent>
                 </Card>

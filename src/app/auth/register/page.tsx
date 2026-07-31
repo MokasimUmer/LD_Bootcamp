@@ -14,7 +14,6 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"DEVELOPER" | "ORGANIZER">("DEVELOPER");
   const [lightningAddress, setLightningAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -29,7 +28,7 @@ export default function RegisterPage() {
         name,
         email,
         password,
-        role,
+        role: "DEVELOPER",
         lightningAddress: lightningAddress ? lightningAddress : undefined,
       });
 
@@ -37,11 +36,7 @@ export default function RegisterPage() {
       localStorage.setItem("afr_token", accessToken);
       localStorage.setItem("afr_user", JSON.stringify(user));
 
-      if (user.role === "ORGANIZER") {
-        router.push("/organizer");
-      } else {
-        router.push("/developer");
-      }
+      router.push("/developer");
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed. Please check inputs.");
     } finally {
@@ -58,9 +53,9 @@ export default function RegisterPage() {
               <Zap className="w-6 h-6 text-afr-amber fill-afr-amber" />
             </div>
           </div>
-          <h2 className="text-3xl font-extrabold font-display text-white">Join AFR Bootcamp</h2>
+          <h2 className="text-3xl font-extrabold font-display text-white">Developer Registration</h2>
           <p className="text-sm text-slate-400">
-            Create your account as a Developer or Bootcamp Organizer
+            Create your Developer account for Africa Free Routing Bootcamps
           </p>
         </div>
 
@@ -74,39 +69,6 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Role Selection Segmented Control */}
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-2">
-                  Select Role
-                </label>
-                <div className="grid grid-cols-2 gap-3 p-1 rounded-xl bg-slate-950/80 border border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setRole("DEVELOPER")}
-                    className={`flex items-center justify-center space-x-2 py-2.5 rounded-lg text-xs font-bold transition-all ${
-                      role === "DEVELOPER"
-                        ? "bg-afr-amber text-slate-950 shadow-glow-amber"
-                        : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    <Code className="w-4 h-4" />
-                    <span>DEVELOPER</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole("ORGANIZER")}
-                    className={`flex items-center justify-center space-x-2 py-2.5 rounded-lg text-xs font-bold transition-all ${
-                      role === "ORGANIZER"
-                        ? "bg-afr-terracotta text-white shadow-glow-terracotta"
-                        : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    <Shield className="w-4 h-4" />
-                    <span>ORGANIZER</span>
-                  </button>
-                </div>
-              </div>
-
               <div>
                 <label className="block text-xs font-mono text-slate-400 uppercase mb-1">
                   Full Name
@@ -180,12 +142,12 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                variant={role === "DEVELOPER" ? "amber" : "terracotta"}
+                variant="amber"
                 size="lg"
                 disabled={loading}
-                className="w-full mt-2"
+                className="w-full mt-2 shadow-glow-amber"
               >
-                {loading ? "Creating Account..." : `Register as ${role}`}
+                {loading ? "Creating Account..." : "Create Developer Account"}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </form>

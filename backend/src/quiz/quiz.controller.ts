@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { IsString, IsNotEmpty, IsNumber, IsArray } from 'class-validator';
 import { QuizService } from './quiz.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -6,8 +7,15 @@ import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client';
 
 export class SubmitQuizDto {
+  @IsString()
+  @IsNotEmpty()
   bootcampId: string;
+
+  @IsNumber()
+  @IsNotEmpty()
   dayNumber: number;
+
+  @IsArray()
   answers: { questionId: number; selectedIndex: number }[];
 }
 
@@ -20,8 +28,9 @@ export class QuizController {
   async getQuiz(
     @Param('bootcampId') bootcampId: string,
     @Param('dayNumber') dayNumber: string,
+    @Request() req: any,
   ) {
-    return this.quizService.generateDailyQuiz(bootcampId, Number(dayNumber));
+    return this.quizService.generateDailyQuiz(bootcampId, Number(dayNumber), req.user?.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -1,15 +1,32 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 
 export class CreateSubmissionDto {
+  @IsString()
+  @IsNotEmpty()
   bootcampId: string;
+
+  @IsString()
+  @IsNotEmpty()
   githubUrl: string;
+
+  @IsString()
+  @IsOptional()
   demoUrl?: string;
+
+  @IsString()
+  @IsNotEmpty()
   description: string;
 }
 
 export class ReviewSubmissionDto {
+  @IsNumber()
+  @IsNotEmpty()
   rating: number; // 0.0 - 10.0 scale
+
+  @IsString()
+  @IsOptional()
   reviewComment?: string;
 }
 
