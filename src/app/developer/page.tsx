@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { Zap, Award, QrCode, BookOpen, CheckCircle2, Trophy, Send, Edit3, AlertCircle, ArrowRight, Shield, Lock, CheckSquare, Square } from "lucide-react";
+import { Zap, CheckCircle2, Trophy, Send, AlertCircle, Lock, CheckSquare, Square } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -22,7 +22,6 @@ export default function DeveloperPortal() {
   const [quizData, setQuizData] = useState<any>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [qId: number]: number }>({});
   const [quizResult, setQuizResult] = useState<any>(null);
-  const [quizLoading, setQuizLoading] = useState(false);
 
   // Day 5 Submission Form
   const [githubUrl, setGithubUrl] = useState("");
@@ -81,7 +80,6 @@ export default function DeveloperPortal() {
   };
 
   const fetchQuiz = async (bootcampId: string, dayNum: number, token?: string) => {
-    setQuizLoading(true);
     setQuizResult(null);
     setSelectedAnswers({});
     const authToken = token || localStorage.getItem("afr_token");
@@ -92,8 +90,6 @@ export default function DeveloperPortal() {
       setQuizData(res.data);
     } catch (e) {
       setQuizData(null);
-    } finally {
-      setQuizLoading(false);
     }
   };
 
@@ -170,7 +166,7 @@ export default function DeveloperPortal() {
     e.preventDefault();
     const token = localStorage.getItem("afr_token");
     try {
-      const res = await axios.put(
+      await axios.put(
         "http://localhost:4000/api/auth/lightning-address",
         { lightningAddress: lnAddress },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -213,19 +209,26 @@ export default function DeveloperPortal() {
         </div>
 
         {/* Lightning Address Quick Widget */}
-        <form onSubmit={handleUpdateLnAddress} className="flex items-center space-x-2 afr-glass p-2 rounded-xl border-slate-800">
-          <Zap className="w-4 h-4 text-afr-amber ml-2" />
-          <Input
-            type="text"
-            placeholder="user@getalby.com"
-            value={lnAddress}
-            onChange={(e) => setLnAddress(e.target.value)}
-            className="h-8 text-xs font-mono text-afr-amber-light w-48 bg-slate-950/60"
-          />
-          <Button type="submit" variant="amber" size="sm">
-            Save
-          </Button>
-        </form>
+        <div className="space-y-2">
+          <form onSubmit={handleUpdateLnAddress} className="flex items-center space-x-2 afr-glass p-2 rounded-xl border-slate-800">
+            <Zap className="w-4 h-4 text-afr-amber ml-2" />
+            <Input
+              type="text"
+              placeholder="user@getalby.com"
+              value={lnAddress}
+              onChange={(e) => setLnAddress(e.target.value)}
+              className="h-8 text-xs font-mono text-afr-amber-light w-48 bg-slate-950/60"
+            />
+            <Button type="submit" variant="amber" size="sm">
+              Save
+            </Button>
+          </form>
+          {lnMsg && (
+            <p className={`text-xs font-mono ${lnMsg.includes("success") ? "text-emerald-400" : "text-red-400"}`}>
+              {lnMsg}
+            </p>
+          )}
+        </div>
       </div>
 
       {registrations.length === 0 ? (

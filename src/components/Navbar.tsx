@@ -2,21 +2,28 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Zap, LogOut, Shield, MapPin, Award } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
 
 export function Navbar() {
   const [user, setUser] = useState<any>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
+    // Check localStorage for user data
     const stored = localStorage.getItem("afr_user");
     if (stored) {
       try {
         setUser(JSON.parse(stored));
-      } catch (e) {}
+      } catch (e) {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
     }
-  }, []);
+  }, [pathname]); // Re-check user state whenever the route changes
 
   const handleLogout = () => {
     localStorage.removeItem("afr_token");
