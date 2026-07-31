@@ -602,50 +602,73 @@ export default function OrganizerPortal() {
   const currentCurriculum = (currentBootcamp?.curriculum as any[]) || [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Organizer Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <div className="flex items-center space-x-2">
-            <h1 className="text-3xl font-bold font-display text-white">Organizer Portal</h1>
-            <Badge variant="terracotta">ORGANIZER</Badge>
-          </div>
-          <p className="text-sm text-slate-400 mt-1">
-            Feed daily curriculum content, control quiz unlock state, scan developer QR badges, and execute sat payouts.
-          </p>
-        </div>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#120A00] via-[#1C1200] to-[#120A00] border border-yellow-500/25 p-6 shadow-glow-gold">
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-yellow-500/10 blur-3xl pointer-events-none" />
+        <div className="relative z-10 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Organizer Portal</h1>
+                <p className="text-sm text-white/80 mt-0.5">
+                  Manage curriculum, control quizzes, and execute payouts
+                </p>
+              </div>
+            </div>
 
-        <div className="flex items-center space-x-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCreateModal(true)}
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-md whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Create Bootcamp</span>
+            </Button>
+          </div>
+
           {bootcamps.length > 0 && (
-            <>
+            <div className="flex flex-col sm:flex-row gap-2">
               <select
                 value={selectedBootcampId}
                 onChange={(e) => handleBootcampSelect(e.target.value)}
-                className="h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-sm focus:ring-2 focus:ring-afr-amber"
+                className="flex-1 h-10 px-4 rounded-lg border border-white/20 bg-white/10 backdrop-blur-md text-white text-xs sm:text-sm focus:ring-2 focus:ring-white/50 truncate"
               >
                 {bootcamps.map((b) => (
-                  <option key={b.id} value={b.id}>
+                  <option key={b.id} value={b.id} className="bg-slate-900">
                     {b.title} ({b.city?.name})
                   </option>
                 ))}
               </select>
 
-              <Button variant="glass" size="md" onClick={() => setShowCurriculumModal(true)}>
-                <BookOpen className="w-4 h-4 mr-1.5 text-afr-amber" />
-                <span>Manage Content & Quizzes</span>
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCurriculumModal(true)}
+                  className="flex-1 sm:flex-none whitespace-nowrap bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md"
+                >
+                  <BookOpen className="w-4 h-4 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Manage Content</span>
+                </Button>
 
-              <Button variant="outline" size="md" onClick={() => setShowEditModal(true)}>
-                <Edit3 className="w-4 h-4 mr-1.5" />
-                <span>Edit Bootcamp</span>
-              </Button>
-            </>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEditModal(true)}
+                  className="flex-1 sm:flex-none whitespace-nowrap bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md"
+                >
+                  <Edit3 className="w-4 h-4 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
+              </div>
+            </div>
           )}
-
-          <Button variant="terracotta" size="md" onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-4 h-4 mr-1.5" />
-            <span>Create Bootcamp</span>
-          </Button>
         </div>
       </div>
 
@@ -1124,279 +1147,472 @@ export default function OrganizerPortal() {
                 )}
               </CardContent>
             </Card>
+=======
+                    type="button"
+                    onClick={() => handleToggleQuizUnlock(dNum, !isUnlocked)}
+                    className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                      isUnlocked
+                        ? "bg-afr-emerald text-white shadow-glow-emerald"
+                        : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
+                    }`}
+                  >
+                    {isUnlocked ? <Unlock className="w-4 h-4 flex-shrink-0" /> : <Lock className="w-4 h-4 flex-shrink-0" />}
+                    <span className="hidden sm:inline">Day {dNum}</span>
+                    <span className="sm:hidden">D{dNum}</span>
+                    <span className="hidden md:inline">{isUnlocked ? "✓" : "Locked"}</span>
+                  </button>
+                );
+              })}
+            </div>
+>>>>>>> e34294460a7f9bdf1cd3c4cff0ab9f605f5a056b
           </div>
         </div>
       )}
 
-      {/* Manage Daily Curriculum Content Modal */}
+      {bootcamps.length === 0 ? (
+        <div className="relative overflow-hidden rounded-2xl afr-glass border border-slate-800 p-12">
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-afr-amber/10 blur-3xl pointer-events-none" />
+          <div className="relative z-10 text-center space-y-6 max-w-md mx-auto">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-afr-amber to-afr-terracotta flex items-center justify-center mx-auto shadow-glow-amber">
+              <Shield className="w-10 h-10 text-white" />
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-3xl font-bold font-display text-white">No Bootcamps Yet</h3>
+              <p className="text-base text-slate-400">
+                Create your first Lightning bootcamp to unlock QR scanner, curriculum editor, and payouts.
+              </p>
+            </div>
+            <Button
+              variant="amber"
+              size="lg"
+              onClick={() => setShowCreateModal(true)}
+              className="shadow-glow-amber"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              <span>Create Your First Bootcamp</span>
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* QR Scanner — distinct copper/bronze card */}
+          <div className="space-y-6">
+            <div className="card-scanner p-5">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                    <Camera className="w-5 h-5 text-amber-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-amber-100">QR Scanner</h3>
+                    <p className="text-xs text-amber-300/70">Day {scanDay} Check-In</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setScanDay(d)}
+                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
+                        scanDay === d
+                          ? "bg-amber-400 text-slate-950 shadow-glow-terracotta"
+                          : "bg-amber-500/10 border border-amber-500/20 text-amber-300/60 hover:text-amber-200"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                variant={scannerActive ? "outline" : "amber"}
+                size="md"
+                onClick={toggleScanner}
+                className={`w-full ${scannerActive ? "border-amber-500/40 text-amber-200" : "shadow-glow-gold"}`}
+              >
+                {scannerActive ? "Stop Camera Scanner" : "Activate PWA Camera Scanner"}
+              </Button>
+
+              <div id="qr-reader" className={`mt-4 w-full overflow-hidden rounded-lg border border-amber-500/20 bg-black/40 ${!scannerActive ? "hidden" : ""}`} />
+
+              {scanResult && (
+                <div className={`mt-4 p-4 rounded-lg text-sm space-y-2 border ${
+                  scanResult.type === "success"
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                    : "bg-red-500/10 border-red-500/30 text-red-300"
+                }`}>
+                  <div className="flex items-center space-x-2 font-bold">
+                    {scanResult.type === "success"
+                      ? <CheckCircle2 className="w-5 h-5" />
+                      : <AlertCircle className="w-5 h-5" />}
+                    <span>{scanResult.text}</span>
+                  </div>
+                  {scanResult.data && (
+                    <p className="text-xs opacity-70">
+                      Developer: {scanResult.data.developer?.name} · Day {scanResult.data.dayNumber}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 space-y-6">
+            {/* Leaderboard — deep navy card */}
+            <div className="card-leaderboard p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                    <Trophy className="w-5 h-5 text-blue-300" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[10px] font-bold border border-blue-500/30 animate-pulse">LIVE</span>
+                      <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400/80 text-[10px] font-bold border border-blue-500/20">REDIS</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-white">Leaderboard — Day {leaderboardDay}</h3>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4].map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => handleLeaderboardDayChange(d)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                        leaderboardDay === d
+                          ? "bg-blue-500 text-white shadow-glow-navy"
+                          : "bg-blue-500/10 border border-blue-500/20 text-blue-400/70 hover:text-blue-200"
+                      }`}
+                    >
+                      D{d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-black/30 rounded-xl p-4 space-y-3">
+                {leaderboard.length === 0 ? (
+                  <p className="text-sm text-blue-300/50 py-6 text-center">
+                    No scores for Day {leaderboardDay} yet. Updates stream live when developers submit quizzes.
+                  </p>
+                ) : (
+                  leaderboard.map((item, index) => (
+                    <div
+                      key={item.developerId || index}
+                      className={`p-4 rounded-lg flex items-center justify-between transition-all border ${
+                        index === 0
+                          ? "bg-yellow-400/10 border-yellow-400/40"
+                          : index === 1
+                          ? "bg-slate-400/10 border-slate-400/30"
+                          : index === 2
+                          ? "bg-orange-500/10 border-orange-500/30"
+                          : "bg-blue-500/5 border-blue-500/15"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${
+                          index === 0 ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-slate-950"
+                          : index === 1 ? "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-900"
+                          : index === 2 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white"
+                          : "bg-blue-500/20 text-blue-300"
+                        }`}>
+                          #{item.rank || index + 1}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-white">{item.name}</p>
+                          <p className="text-xs text-slate-400">{item.lightningAddress || item.email}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-2xl font-black ${index === 0 ? "text-yellow-300" : "text-white"}`}>
+                          {item.score}
+                        </span>
+                        <p className="text-xs text-slate-500">PTS</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Day 5 Project Review & Payouts */}
+            <div className="relative overflow-hidden rounded-xl afr-glass border border-slate-800 shadow-glass">
+              <div className="p-5">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-afr-emerald to-afr-emerald-dark flex items-center justify-center shadow-glow-emerald">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <span className="px-2 py-0.5 rounded-md bg-afr-emerald/20 text-afr-emerald text-[10px] font-bold border border-afr-emerald/30">DAY 5 HACKATHON</span>
+                    <h3 className="text-lg font-bold text-white mt-1">Project Review & Payouts</h3>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {submissions.length === 0 ? (
+                    <p className="text-sm text-slate-400 text-center py-8">No Day 5 project submissions yet.</p>
+                  ) : (
+                    submissions.map((sub) => (
+                      <div key={sub.id} className="p-4 rounded-lg bg-slate-950/60 border border-slate-800 space-y-4 hover:border-afr-amber/30 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <h4 className="font-bold text-base text-white">{sub.developer?.name}</h4>
+                            <p className="text-xs text-afr-amber font-mono">
+                              ⚡ {sub.developer?.lightningAddress || "Not Configured"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <a href={sub.githubUrl} target="_blank" rel="noreferrer">
+                              <Button variant="outline" size="sm">
+                                <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                                GitHub
+                              </Button>
+                            </a>
+                            {sub.demoUrl && (
+                              <a href={sub.demoUrl} target="_blank" rel="noreferrer">
+                                <Button variant="outline" size="sm">
+                                  <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                                  Demo
+                                </Button>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        <p className="text-sm text-slate-300 leading-relaxed bg-slate-950 p-3 rounded-lg border border-slate-800">
+                          {sub.description}
+                        </p>
+
+                        <div className="flex items-center space-x-3 pt-2">
+                          <span className="text-xs font-bold text-slate-400">RATING:</span>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={10}
+                            step={0.5}
+                            defaultValue={sub.rating || 0}
+                            onBlur={(e) => handleGradeSubmission(sub.id, Number(e.target.value), "Rated by organizer")}
+                            className="w-20 h-8 text-sm font-bold text-afr-emerald bg-slate-950 border-slate-800"
+                          />
+                          <span className="text-xs text-slate-500">/ 10.0</span>
+                          {sub.rating >= 8 && (
+                            <Star className="w-4 h-4 text-afr-amber fill-afr-amber" />
+                          )}
+                        </div>
+
+                        <div className="p-4 rounded-lg afr-glass-emerald space-y-3">
+                          <p className="text-sm font-bold text-afr-emerald">
+                            ⚡ LIGHTNING PAYOUT (LUD-16)
+                          </p>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <Input
+                              type="number"
+                              placeholder="Amount in Sats"
+                              defaultValue={10000}
+                              onChange={(e) =>
+                                setPayoutAmounts((prev) => ({ ...prev, [sub.id]: Number(e.target.value) }))
+                              }
+                              className="sm:w-36 h-9 text-sm font-mono bg-slate-950 border-afr-emerald/30 text-afr-emerald"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleTriggerPayout(sub)}
+                              className="bg-afr-emerald hover:bg-afr-emerald-dark text-white shadow-glow-emerald whitespace-nowrap"
+                            >
+                              <Zap className="w-4 h-4 mr-1.5 fill-white" />
+                              Pay Sat Prize
+                            </Button>
+                          </div>
+
+                          {payoutLogs[sub.id] && (
+                            <div
+                              className={`p-3 rounded-lg text-sm font-mono ${
+                                payoutLogs[sub.id].type === "success"
+                                  ? "bg-afr-emerald/20 border border-afr-emerald/50 text-afr-emerald"
+                                  : "bg-afr-terracotta/20 border border-afr-terracotta/50 text-afr-terracotta-warm"
+                              }`}
+                            >
+                              <p>{payoutLogs[sub.id].text}</p>
+                              {payoutLogs[sub.id].preimage && (
+                                <p className="text-xs break-all text-slate-400 mt-2">
+                                  Preimage: {payoutLogs[sub.id].preimage}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Daily Curriculum Modal */}
       {showCurriculumModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl afr-card p-6 border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold font-display text-white">Manage Daily Curriculum & Tasks</h3>
-              <button onClick={() => setShowCurriculumModal(false)} className="text-slate-400 hover:text-white">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl afr-glass rounded-2xl shadow-glass border border-slate-800 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-afr-amber to-afr-terracotta p-5 flex items-center justify-between">
+              <h3 className="text-2xl font-bold font-display text-white">Manage Daily Curriculum</h3>
+              <button
+                onClick={() => setShowCurriculumModal(false)}
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Select Day Tab */}
-            <div className="flex items-center space-x-2 p-1 rounded-xl bg-slate-950 border border-slate-800">
-              {[1, 2, 3, 4, 5].map((dNum) => (
-                <button
-                  key={dNum}
-                  onClick={() => handleCurrDaySelect(dNum)}
-                  className={`flex-1 py-2 text-xs font-mono font-bold rounded-lg transition-all ${
-                    currDay === dNum ? "bg-afr-amber text-slate-950" : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  DAY {dNum}
-                </button>
-              ))}
-            </div>
-
-            {currSaveMsg && (
-              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
-                {currSaveMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveCurriculum} className="space-y-4">
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Day {currDay} Module Title</label>
-                <Input required value={currTitle} onChange={(e) => setCurrTitle(e.target.value)} />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Curriculum Content (Markdown Format)</label>
-                <textarea
-                  required
-                  rows={6}
-                  value={currContent}
-                  onChange={(e) => setCurrContent(e.target.value)}
-                  placeholder="# Day 1 Topic..."
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs font-mono text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Mandatory Task Checklist (One task per line)</label>
-                <textarea
-                  rows={3}
-                  value={currTasks}
-                  onChange={(e) => setCurrTasks(e.target.value)}
-                  placeholder="Understand Payment Channels&#10;Set up LND node&#10;Verify invoice"
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs text-slate-100"
-                />
-              </div>
-
-              {/* Media Attachments & Learning Resources Section */}
-              <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-mono font-bold text-slate-200 uppercase flex items-center space-x-1.5">
-                    <ExternalLink className="w-4 h-4 text-afr-amber" />
-                    <span>Media Attachments & Learning Resources ({currResources.length})</span>
-                  </h4>
-                  <span className="text-[10px] text-slate-400">Photos, Videos, Spec Links & Docs</span>
-                </div>
-
-                {/* List of Attached Resources */}
-                {currResources.length > 0 && (
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {currResources.map((res, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 text-xs"
-                      >
-                        <div className="flex items-center space-x-2.5 overflow-hidden">
-                          <Badge
-                            variant={
-                              res.type === "IMAGE"
-                                ? "amber"
-                                : res.type === "VIDEO"
-                                ? "terracotta"
-                                : "emerald"
-                            }
-                            className="text-[9px] font-mono shrink-0"
-                          >
-                            {res.type}
-                          </Badge>
-                          <div className="truncate">
-                            <p className="font-bold text-white text-xs truncate">{res.title}</p>
-                            <a
-                              href={res.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[10px] text-afr-amber underline truncate block"
-                            >
-                              {res.url}
-                            </a>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveResource(idx)}
-                          className="text-slate-400 hover:text-red-400 p-1 shrink-0"
-                          title="Remove Resource"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Hidden File Input for Device Uploads */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept="image/*,video/*,application/pdf,.doc,.docx"
-                  className="hidden"
-                />
-
-                {/* New Resource Add Form */}
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-2 border-t border-slate-800/80">
-                  <div className="sm:col-span-3">
-                    <select
-                      value={newResType}
-                      onChange={(e: any) => setNewResType(e.target.value)}
-                      className="w-full h-9 px-2 rounded-lg border border-slate-800 bg-slate-900 text-xs font-mono text-slate-200"
-                    >
-                      <option value="IMAGE">📷 Photo / Diagram</option>
-                      <option value="VIDEO">🎥 Video (YouTube/MP4)</option>
-                      <option value="LINK">🔗 Web Link / Spec</option>
-                      <option value="DOCUMENT">📄 PDF / Document</option>
-                    </select>
-                  </div>
-                  <div className="sm:col-span-4">
-                    <Input
-                      placeholder="Title (e.g. LND Arch)"
-                      value={newResTitle}
-                      onChange={(e) => setNewResTitle(e.target.value)}
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                  <div className="sm:col-span-5">
-                    <Input
-                      placeholder={newResUrl.startsWith("data:") ? "File Loaded from Device ✓" : "URL (https://...) or choose file below"}
-                      value={newResUrl}
-                      onChange={(e) => setNewResUrl(e.target.value)}
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="h-8 text-xs font-mono text-afr-amber border border-afr-amber/40 hover:bg-afr-amber/10"
-                    >
-                      <Upload className="w-3.5 h-3.5 mr-1" />
-                      <span>Choose File from Device</span>
-                    </Button>
-                    <Input
-                      placeholder="Short Description (optional)"
-                      value={newResDesc}
-                      onChange={(e) => setNewResDesc(e.target.value)}
-                      className="h-8 text-xs max-w-xs"
-                    />
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddResource}
-                    className="h-8 text-xs font-mono"
+            <div className="p-6 space-y-5">
+              <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-950 border border-slate-800">
+                {[1, 2, 3, 4, 5].map((dNum) => (
+                  <button
+                    key={dNum}
+                    onClick={() => handleCurrDaySelect(dNum)}
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
+                      currDay === dNum
+                        ? "bg-afr-amber text-slate-950 shadow-glow-amber"
+                        : "text-slate-400 hover:text-white hover:bg-slate-900"
+                    }`}
                   >
-                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Attachment
+                    DAY {dNum}
+                  </button>
+                ))}
+              </div>
+
+              {currSaveMsg && (
+                <div className="p-4 rounded-lg bg-afr-emerald/20 border border-afr-emerald/50 text-afr-emerald text-sm font-medium">
+                  ✓ {currSaveMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveCurriculum} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">Day {currDay} Module Title</label>
+                  <Input
+                    required
+                    value={currTitle}
+                    onChange={(e) => setCurrTitle(e.target.value)}
+                    className="bg-slate-950 border-slate-800 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">Curriculum Content (Markdown Format)</label>
+                  <textarea
+                    required
+                    rows={6}
+                    value={currContent}
+                    onChange={(e) => setCurrContent(e.target.value)}
+                    placeholder="# Day 1 Topic..."
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-amber focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">Mandatory Task Checklist (One task per line)</label>
+                  <textarea
+                    rows={3}
+                    value={currTasks}
+                    onChange={(e) => setCurrTasks(e.target.value)}
+                    placeholder="Understand Payment Channels&#10;Set up LND node&#10;Verify invoice"
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-amber focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">Quiz Difficulty</label>
+                  <select
+                    value={currDifficulty}
+                    onChange={(e) => setCurrDifficulty(e.target.value)}
+                    className="w-full h-11 px-4 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm focus:ring-2 focus:ring-afr-amber focus:border-transparent"
+                  >
+                    <option value="EASY">EASY</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="HARD">HARD</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4">
+                  <Button type="button" variant="ghost" onClick={() => setShowCurriculumModal(false)}>
+                    Close
+                  </Button>
+                  <Button type="submit" variant="amber" className="shadow-glow-amber">
+                    <Save className="w-4 h-4 mr-1.5" />
+                    Save Day {currDay} Curriculum
                   </Button>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Quiz Difficulty</label>
-                <select
-                  value={currDifficulty}
-                  onChange={(e) => setCurrDifficulty(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs"
-                >
-                  <option value="EASY">EASY</option>
-                  <option value="MEDIUM">MEDIUM</option>
-                  <option value="HARD">HARD</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-4">
-                <Button type="button" variant="ghost" onClick={() => setShowCurriculumModal(false)}>
-                  Close
-                </Button>
-                <Button type="submit" variant="amber">
-                  <Save className="w-4 h-4 mr-1.5" />
-                  Save Day {currDay} Curriculum
-                </Button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* Create Bootcamp Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg afr-card p-6 border-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4">
+          <div className="w-full max-w-lg afr-glass rounded-2xl shadow-glass border border-slate-800 overflow-hidden">
+            <div className="bg-gradient-to-r from-afr-amber to-afr-terracotta p-5 flex items-center justify-between">
               <h3 className="text-xl font-bold font-display text-white">Create New AFR Bootcamp</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateBootcamp} className="space-y-4">
+            <form onSubmit={handleCreateBootcamp} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Bootcamp Title</label>
-                <Input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="AFR Nairobi Lightning Developer Bootcamp" />
+                <label className="block text-sm font-bold text-white mb-2">Bootcamp Title</label>
+                <Input
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="AFR Nairobi Lightning Developer Bootcamp"
+                  className="bg-slate-950 border-slate-800 text-white"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Description</label>
+                <label className="block text-sm font-bold text-white mb-2">Description</label>
                 <textarea
                   required
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="5-day intensive Lightning Network developer bootcamp..."
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-xs text-slate-100"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-amber"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1">African Country</label>
+                  <label className="block text-sm font-bold text-white mb-2">African Country</label>
                   <select
                     required
                     value={createCountryId}
                     onChange={(e) => handleCountryChange(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs"
+                    className="w-full h-11 px-3 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm focus:ring-2 focus:ring-afr-amber"
                   >
-                    <option value="">Select Country (54 African Nations)</option>
+                    <option value="">Select Country</option>
                     {countries.map((c) => (
                       <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1">City Hub</label>
+                  <label className="block text-sm font-bold text-white mb-2">City Hub</label>
                   <select
                     required
                     value={createCityId}
                     onChange={(e) => setCreateCityId(e.target.value)}
                     disabled={!createCountryId}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs disabled:opacity-40"
+                    className="w-full h-11 px-3 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm disabled:opacity-40 focus:ring-2 focus:ring-afr-amber"
                   >
                     <option value="">Select City</option>
                     {cities.map((ct) => (
@@ -1407,15 +1623,21 @@ export default function OrganizerPortal() {
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Max Seat Capacity</label>
-                <Input type="number" min={1} value={maxSeats} onChange={(e) => setMaxSeats(Number(e.target.value))} />
+                <label className="block text-sm font-bold text-white mb-2">Max Seat Capacity</label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={maxSeats}
+                  onChange={(e) => setMaxSeats(Number(e.target.value))}
+                  className="bg-slate-950 border-slate-800 text-white"
+                />
               </div>
 
-              <div className="flex items-center justify-end space-x-3 pt-4">
+              <div className="flex items-center justify-end gap-3 pt-4">
                 <Button type="button" variant="ghost" onClick={() => setShowCreateModal(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" variant="terracotta">
+                <Button type="submit" variant="amber" className="shadow-glow-amber">
                   Create Bootcamp
                 </Button>
               </div>
@@ -1426,43 +1648,57 @@ export default function OrganizerPortal() {
 
       {/* Edit Bootcamp Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg afr-card p-6 border-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4">
+          <div className="w-full max-w-lg afr-glass rounded-2xl shadow-glass border border-slate-800 overflow-hidden">
+            <div className="bg-gradient-to-r from-afr-terracotta to-afr-terracotta-deep p-5 flex items-center justify-between">
               <h3 className="text-xl font-bold font-display text-white">Edit Bootcamp Details</h3>
-              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleEditBootcamp} className="space-y-4">
+            <form onSubmit={handleEditBootcamp} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Bootcamp Title</label>
-                <Input required value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                <label className="block text-sm font-bold text-white mb-2">Bootcamp Title</label>
+                <Input
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-white"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Description</label>
+                <label className="block text-sm font-bold text-white mb-2">Description</label>
                 <textarea
                   required
                   rows={3}
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-xs text-slate-100"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-afr-terracotta"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Max Seat Capacity</label>
-                  <Input type="number" min={1} value={editMaxSeats} onChange={(e) => setEditMaxSeats(Number(e.target.value))} />
+                  <label className="block text-sm font-bold text-white mb-2">Max Seat Capacity</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editMaxSeats}
+                    onChange={(e) => setEditMaxSeats(Number(e.target.value))}
+                    className="bg-slate-950 border-slate-800 text-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1">Status</label>
+                  <label className="block text-sm font-bold text-white mb-2">Status</label>
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs"
+                    className="w-full h-11 px-3 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm focus:ring-2 focus:ring-afr-terracotta"
                   >
                     <option value="UPCOMING">UPCOMING</option>
                     <option value="ACTIVE">ACTIVE</option>
@@ -1472,11 +1708,11 @@ export default function OrganizerPortal() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end space-x-3 pt-4">
+              <div className="flex items-center justify-end gap-3 pt-4">
                 <Button type="button" variant="ghost" onClick={() => setShowEditModal(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" variant="amber">
+                <Button type="submit" variant="terracotta" className="shadow-glow-terracotta">
                   Save Changes
                 </Button>
               </div>

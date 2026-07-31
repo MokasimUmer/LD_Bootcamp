@@ -61,7 +61,7 @@ export default function LoginPage() {
         <Card className="afr-glass border-slate-800 shadow-glow-amber/10">
           <CardContent className="pt-6">
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center space-x-2 text-red-400 text-sm">
+              <div className="mb-4 p-3 rounded-lg afr-glass-terracotta flex items-center space-x-2 text-afr-terracotta-warm text-sm">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{error}</span>
               </div>
