@@ -506,66 +506,71 @@ export default function OrganizerPortal() {
   return (
     <div className="space-y-8">
       {/* Organizer Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <div className="flex items-center space-x-2">
-            <h1 className="text-3xl font-bold font-display text-white">Organizer Portal</h1>
-            <Badge variant="terracotta">ORGANIZER</Badge>
+      <div className="space-y-4 border-b border-slate-800 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Organizer Portal</h1>
+              <Badge variant="terracotta">ORGANIZER</Badge>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Manage curriculum, control quizzes, scan QR badges, and execute payouts.
+            </p>
           </div>
-          <p className="text-sm text-slate-400 mt-1">
-            Feed daily curriculum content, control quiz unlock state, scan developer QR badges, and execute sat payouts.
-          </p>
+
+          <div className="flex items-center gap-2">
+            <Button variant="terracotta" size="sm" onClick={() => setShowCreateModal(true)} className="whitespace-nowrap">
+              <Plus className="w-4 h-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Create Bootcamp</span>
+            </Button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-3">
-          {bootcamps.length > 0 && (
-            <>
-              <select
-                value={selectedBootcampId}
-                onChange={(e) => handleBootcampSelect(e.target.value)}
-                className="h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-sm focus:ring-2 focus:ring-afr-amber"
-              >
-                {bootcamps.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.title} ({b.city?.name})
-                  </option>
-                ))}
-              </select>
+        {/* Bootcamp Selection & Actions Row */}
+        {bootcamps.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-2">
+            <select
+              value={selectedBootcampId}
+              onChange={(e) => handleBootcampSelect(e.target.value)}
+              className="flex-1 h-10 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-afr-amber truncate"
+            >
+              {bootcamps.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.title} ({b.city?.name})
+                </option>
+              ))}
+            </select>
 
-              <Button variant="glass" size="md" onClick={() => setShowCurriculumModal(true)}>
-                <BookOpen className="w-4 h-4 mr-1.5 text-afr-amber" />
-                <span>Manage Content & Quizzes</span>
+            <div className="flex gap-2">
+              <Button variant="glass" size="sm" onClick={() => setShowCurriculumModal(true)} className="flex-1 sm:flex-none whitespace-nowrap">
+                <BookOpen className="w-4 h-4 sm:mr-1.5 text-afr-amber" />
+                <span className="hidden sm:inline">Manage Content</span>
               </Button>
 
-              <Button variant="outline" size="md" onClick={() => setShowEditModal(true)}>
-                <Edit3 className="w-4 h-4 mr-1.5" />
-                <span>Edit Bootcamp</span>
+              <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)} className="flex-1 sm:flex-none whitespace-nowrap">
+                <Edit3 className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Edit Bootcamp</span>
               </Button>
-            </>
-          )}
-
-          <Button variant="terracotta" size="md" onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-4 h-4 mr-1.5" />
-            <span>Create Bootcamp</span>
-          </Button>
-        </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Organizer Quiz Unlock Control Toolbar */}
       {currentBootcamp && (
         <Card className="afr-glass border-slate-800">
-          <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <CardContent className="p-4 space-y-4">
             <div>
               <h4 className="font-bold text-sm text-white flex items-center space-x-2">
-                <Lock className="w-4 h-4 text-afr-amber" />
+                <Lock className="w-4 h-4 text-afr-amber flex-shrink-0" />
                 <span>Daily Quiz Unlock Controller</span>
               </h4>
-              <p className="text-xs text-slate-400">
-                Quizzes are hidden by default. Click to unlock/publish milestone quizzes for developers after they complete daily tasks.
+              <p className="text-xs text-slate-400 mt-1">
+                Quizzes are hidden by default. Click to publish milestone quizzes for developers.
               </p>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
               {[1, 2, 3, 4].map((dNum) => {
                 const dayObj = currentCurriculum.find((c) => c.day === dNum) || { quizUnlocked: false };
                 const isUnlocked = Boolean(dayObj.quizUnlocked);
@@ -573,15 +578,17 @@ export default function OrganizerPortal() {
                   <button
                     key={dNum}
                     type="button"
-                    onClick={() => handleToggleQuizUnlock(dNum, isUnlocked)}
-                    className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all border ${
+                    onClick={() => handleToggleQuizUnlock(dNum, !isUnlocked)}
+                    className={`flex items-center justify-center space-x-1.5 px-3 py-2.5 rounded-xl text-xs font-mono font-bold transition-all border whitespace-nowrap ${
                       isUnlocked
                         ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-glow-emerald"
                         : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                    <span>Day {dNum} {isUnlocked ? "Published" : "Locked"}</span>
+                    {isUnlocked ? <Unlock className="w-3.5 h-3.5 flex-shrink-0" /> : <Lock className="w-3.5 h-3.5 flex-shrink-0" />}
+                    <span className="hidden sm:inline">Day {dNum}</span>
+                    <span className="sm:hidden">D{dNum}</span>
+                    <span className="hidden md:inline">{isUnlocked ? "Published" : "Locked"}</span>
                   </button>
                 );
               })}
@@ -616,15 +623,15 @@ export default function OrganizerPortal() {
           <div className="space-y-6">
             <Card className="afr-card border-slate-800 shadow-glow-terracotta/10">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <Badge variant="terracotta">PWA SCANNER</Badge>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((d) => (
                       <button
                         key={d}
                         onClick={() => setScanDay(d)}
-                        className={`w-6 h-6 rounded text-[10px] font-mono font-bold ${
-                          scanDay === d ? "bg-afr-terracotta text-white" : "bg-slate-900 text-slate-500"
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded text-[10px] sm:text-xs font-mono font-bold transition-all ${
+                          scanDay === d ? "bg-afr-terracotta text-white shadow-glow-terracotta" : "bg-slate-900 text-slate-500 hover:text-slate-300"
                         }`}
                       >
                         D{d}
@@ -632,9 +639,9 @@ export default function OrganizerPortal() {
                     ))}
                   </div>
                 </div>
-                <CardTitle className="text-xl flex items-center space-x-2 mt-2">
-                  <Camera className="w-5 h-5 text-afr-terracotta-warm" />
-                  <span>Daily QR Check-In Scanner</span>
+                <CardTitle className="text-lg sm:text-xl flex items-center space-x-2 mt-2">
+                  <Camera className="w-5 h-5 text-afr-terracotta-warm flex-shrink-0" />
+                  <span>QR Check-In Scanner</span>
                 </CardTitle>
                 <CardDescription>Scan developer badges for Day {scanDay}</CardDescription>
               </CardHeader>
@@ -685,28 +692,28 @@ export default function OrganizerPortal() {
             {/* Live Arcade Leaderboard Monitor */}
             <Card className="afr-card border-afr-amber/40 shadow-glow-amber/10">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="live">LIVE WEBSOCKET STREAM</Badge>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="live">LIVE WEBSOCKET</Badge>
                     <Badge variant="amber">REDIS SORTED SET</Badge>
                   </div>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     {[1, 2, 3, 4].map((d) => (
                       <button
                         key={d}
                         onClick={() => handleLeaderboardDayChange(d)}
-                        className={`px-2 py-1 rounded text-xs font-mono font-bold ${
-                          leaderboardDay === d ? "bg-afr-amber text-slate-950" : "bg-slate-900 text-slate-400"
+                        className={`px-2.5 py-1.5 rounded text-xs font-mono font-bold transition-all ${
+                          leaderboardDay === d ? "bg-afr-amber text-slate-950 shadow-glow-amber" : "bg-slate-900 text-slate-400 hover:text-slate-200"
                         }`}
                       >
-                        DAY {d}
+                        D{d}
                       </button>
                     ))}
                   </div>
                 </div>
-                <CardTitle className="text-2xl flex items-center space-x-2 mt-2">
-                  <Trophy className="w-6 h-6 text-afr-amber" />
-                  <span>Arcade Leaderboard Monitor (Day {leaderboardDay})</span>
+                <CardTitle className="text-xl flex items-center space-x-2 mt-2">
+                  <Trophy className="w-5 h-5 text-afr-amber flex-shrink-0" />
+                  <span>Leaderboard — Day {leaderboardDay}</span>
                 </CardTitle>
               </CardHeader>
 
@@ -814,30 +821,28 @@ export default function OrganizerPortal() {
                       </div>
 
                       <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-mono font-bold text-afr-amber">
-                            AUTOMATED LIGHTNING PAYOUT (LUD-16)
-                          </span>
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="number"
-                              placeholder="Amount Sats"
-                              defaultValue={10000}
-                              onChange={(e) =>
-                                setPayoutAmounts((prev) => ({ ...prev, [sub.id]: Number(e.target.value) }))
-                              }
-                              className="w-28 h-8 text-xs font-mono"
-                            />
-                            <Button
-                              variant="amber"
-                              size="sm"
-                              onClick={() => handleTriggerPayout(sub)}
-                              className="shadow-glow-amber"
-                            >
-                              <Zap className="w-3.5 h-3.5 mr-1 fill-slate-950" />
-                              Pay Sat Prize
-                            </Button>
-                          </div>
+                        <p className="text-xs font-mono font-bold text-afr-amber">
+                          LIGHTNING PAYOUT (LUD-16)
+                        </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Amount in Sats"
+                            defaultValue={10000}
+                            onChange={(e) =>
+                              setPayoutAmounts((prev) => ({ ...prev, [sub.id]: Number(e.target.value) }))
+                            }
+                            className="sm:w-36 h-9 text-xs font-mono"
+                          />
+                          <Button
+                            variant="amber"
+                            size="sm"
+                            onClick={() => handleTriggerPayout(sub)}
+                            className="shadow-glow-amber whitespace-nowrap"
+                          >
+                            <Zap className="w-3.5 h-3.5 mr-1.5 fill-slate-950" />
+                            Pay Sat Prize
+                          </Button>
                         </div>
 
                         {payoutLogs[sub.id] && (
