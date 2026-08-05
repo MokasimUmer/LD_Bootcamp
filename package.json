@@ -1,37 +1,21 @@
 {
-  "name": "afr-lightning-bootcamp",
+  "name": "afr-lightning-bootcamp-monorepo",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "backend:dev": "cd backend && npm run start:dev"
-  },
-  "dependencies": {
-    "@prisma/client": "^5.22.0",
-    "axios": "^1.7.4",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "framer-motion": "^11.3.19",
-    "html5-qrcode": "^2.3.8",
-    "lucide-react": "^0.417.0",
-    "next": "^14.2.5",
-    "qrcode.react": "^3.1.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "socket.io-client": "^4.7.5",
-    "tailwind-merge": "^2.4.0"
+    "dev": "concurrently -k -n \"WEB,API\" -c \"cyan,magenta\" \"npm run dev:web\" \"npm run dev:backend\"",
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:backend": "cd apps/backend && npm run start:dev",
+    "build": "npm run build --workspaces",
+    "build:web": "cd apps/web && npm run build",
+    "build:backend": "cd apps/backend && npm run build",
+    "db:generate": "cd apps/backend && npm run prisma:generate",
+    "db:seed": "cd apps/backend && npm run seed"
   },
   "devDependencies": {
-    "@types/node": "^20.14.12",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.40",
-    "prisma": "^5.22.0",
-    "tailwindcss": "^3.4.7",
-    "typescript": "^5.5.4"
+    "concurrently": "^8.2.2"
   }
 }

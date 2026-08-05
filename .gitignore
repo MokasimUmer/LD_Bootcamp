@@ -1,46 +1,18 @@
 # Dependencies
 node_modules/
-**/node_modules/
 
-# Build & output directories
+# Next.js Build Outputs
 .next/
-dist/
-**/dist/
-build/
-**/build/
 out/
-.turbo/
-.cache/
-coverage/
 
-# Webpack & Bundler temporary files
-.webpack/
-**/webpack/
-*.webpack.js
-*.webpack.hot-update.json
-*.hot-update.js
-*.hot-update.json
-webpack-runtime.js
-webpack.config.js
-webpack.config.ts
+# NestJS Build Outputs
+dist/
 
-# Environment files (all .env files in root and subdirectories)
-.env
-.env.*
-*.env
-!.env.example
-
-# Logs
+# Logs & Environment
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+.env
+.env*.local
 
-# System & IDE files
+# IDE / OS
 .DS_Store
-Thumbs.db
-.vscode/
-.idea/
-*.swp
-*.swo
+*.tsbuildinfo

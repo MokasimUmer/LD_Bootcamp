@@ -23,22 +23,18 @@ export default function LoginPage() {
 
     try {
       const res = await axios.post("http://localhost:4000/api/auth/login", {
-        email,
-        password,
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
       });
 
       const { accessToken, user } = res.data;
       localStorage.setItem("afr_token", accessToken);
       localStorage.setItem("afr_user", JSON.stringify(user));
 
-      if (user.role === "ORGANIZER" || user.role === "ADMIN") {
-        router.push("/organizer");
-      } else {
-        router.push("/developer");
-      }
+      const targetPath = user.role === "ORGANIZER" || user.role === "ADMIN" ? "/organizer" : "/developer";
+      window.location.href = targetPath;
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to authenticate. Please check credentials.");
-    } finally {
       setLoading(false);
     }
   };
