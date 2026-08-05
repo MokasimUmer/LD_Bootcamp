@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: afr-backend
+    env: node
+    rootDir: apps/backend
+    buildCommand: npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: web
+    name: afr-web
+    env: node
+    rootDir: apps/web
+    buildCommand: npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: afr-backend
+          property: url

@@ -16,3 +16,5 @@ dist/
 # IDE / OS
 .DS_Store
 *.tsbuildinfo
+.vercel
+.env*
