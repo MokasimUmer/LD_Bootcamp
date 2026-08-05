@@ -56,11 +56,13 @@ LD_Bootcamp/
 git clone https://github.com/MokasimUmer/LD_Bootcamp.git
 ```
 
-### Navigate into the project
+### Navigate into the backend
 
 ```bash
 cd LD_Bootcamp
+cd backend
 ```
+
 
 ### Install dependencies
 
@@ -68,14 +70,31 @@ cd LD_Bootcamp
 npm install
 ```
 
-### Run the project
+### Run the backend
 
 ```bash
-npm start
+npm run start:dev
 ```
 
 ---
+### Navigate into the frontend
 
+```bash
+cd LD_Bootcamp
+```
+
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Run the backend
+
+```bash
+npm run dev
+```
 ## 🤝 Contributing
 
 Contributions are welcome!
