@@ -308,28 +308,24 @@ export class PayoutsService {
     const developer = await this.prisma.user.findUnique({ where: { id: developerId } });
     const targetAddress = dto.lightningAddress || developer?.lightningAddress || `${developer?.name?.toLowerCase().replace(/\s+/g, '')}@getalby.com`;
 
-    const existingPaid = await this.prisma.payout.findFirst({
-      where: {
-        developerId,
-        bootcampId: dto.bootcampId,
-        status: 'PAID',
-      },
-    });
 
-    if (existingPaid) {
-      return {
-        success: true,
-        alreadyClaimed: true,
-        rank,
-        amountSats,
-        lightningAddress: existingPaid.lightningAddress,
-        payout: {
-          ...existingPaid,
-          amountMsat: existingPaid.amountMsat.toString(),
-          amountSats,
-        },
-        message: `Prize of ${amountSats} Sats was previously settled to ${existingPaid.lightningAddress}.`,
-      };
+
+    // Resolve or generate BOLT11 Invoice
+    let generatedBolt11 = dto.bolt11Invoice || '';
+
+    // If no explicit BOLT11 was provided, try resolving BOLT11 via LNURL from developer's Lightning Address
+    if (!generatedBolt11 && targetAddress && targetAddress.includes('@')) {
+      try {
+        const amountMsat = BigInt(amountSats) * BigInt(1000);
+        const params = await this.lnurlResolver.resolveLightningAddress(targetAddress);
+        const { pr } = await this.lnurlResolver.fetchBolt11Invoice(params.callback, Number(amountMsat));
+        if (pr) {
+          generatedBolt11 = pr;
+          this.logger.log(`Generated BOLT11 invoice via LNURL for ${targetAddress}: ${pr.substring(0, 20)}...`);
+        }
+      } catch (err: any) {
+        this.logger.warn(`Could not auto-generate BOLT11 via LNURL for ${targetAddress}: ${err.message}`);
+      }
     }
 
     // Check for existing pending invoice
@@ -347,8 +343,9 @@ export class PayoutsService {
         where: { id: existingPending.id },
         data: {
           lightningAddress: targetAddress,
-          bolt11: dto.bolt11Invoice || existingPending.bolt11,
+          bolt11: generatedBolt11 || existingPending.bolt11,
           amountMsat: BigInt(amountSats) * BigInt(1000),
+          status: 'PENDING',
         },
       });
     } else {
@@ -359,7 +356,7 @@ export class PayoutsService {
           lightningAddress: targetAddress,
           amountMsat: BigInt(amountSats) * BigInt(1000),
           status: 'PENDING',
-          bolt11: dto.bolt11Invoice || null,
+          bolt11: generatedBolt11 || null,
         },
       });
     }
@@ -370,12 +367,13 @@ export class PayoutsService {
       rank,
       amountSats,
       lightningAddress: targetAddress,
+      bolt11: generatedBolt11 || payoutRecord.bolt11,
       payout: {
         ...payoutRecord,
         amountMsat: payoutRecord.amountMsat.toString(),
         amountSats,
       },
-      message: `⚡ Invoice for ${amountSats} Sats generated successfully! It has been submitted to the Bootcamp Organizer portal for settlement.`,
+      message: `⚡ Invoice for ${amountSats} Sats created and sent to Organizer Portal for settlement!`,
     };
   }
 }

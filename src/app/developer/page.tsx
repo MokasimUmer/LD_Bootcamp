@@ -18,7 +18,7 @@ export default function DeveloperPortal() {
 
   const [activeDay, setActiveDay] = useState<number>(1);
   const [completedTasks, setCompletedTasks] = useState<{ [day: number]: { [taskIdx: number]: boolean } }>({});
-  
+
   const [quizData, setQuizData] = useState<any>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [qId: number]: number }>({});
   const [quizResult, setQuizResult] = useState<any>(null);
@@ -54,7 +54,7 @@ export default function DeveloperPortal() {
       return;
     }
     const parsed = JSON.parse(storedUser);
-    
+
     // Strict Role Guard
     if (parsed.role === "ORGANIZER" || parsed.role === "ADMIN") {
       router.push("/organizer");
@@ -87,7 +87,7 @@ export default function DeveloperPortal() {
         setActiveReg(res.data[0]);
         fetchQuiz(res.data[0].bootcampId, 1, token);
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const fetchMyPayouts = async (token: string) => {
@@ -96,14 +96,14 @@ export default function DeveloperPortal() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPayouts(res.data);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const fetchLeaderboard = async (bootcampId: string, dayNum: number) => {
     try {
       const res = await axios.get(`http://localhost:4000/api/quiz/leaderboard/${bootcampId}/day/${dayNum}`);
       setLeaderboard(res.data || []);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const fetchQuiz = async (bootcampId: string, dayNum: number, token?: string) => {
@@ -328,53 +328,52 @@ export default function DeveloperPortal() {
           <div className="space-y-6">
             <div className="card-qr p-5 flex flex-col items-center space-y-4">
               <span className="px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-200 text-[10px] font-bold border border-yellow-500/30">OFFICIAL DEVELOPER BADGE</span>
-                <h3 className="text-lg font-bold text-white text-center">{activeReg?.bootcamp?.title}</h3>
-                <p className="text-xs text-white/80 font-bold">
-                  📍 {activeReg?.bootcamp?.city?.country?.name} &bull; {activeReg?.bootcamp?.city?.name}
+              <h3 className="text-lg font-bold text-white text-center">{activeReg?.bootcamp?.title}</h3>
+              <p className="text-xs text-white/80 font-bold">
+                📍 {activeReg?.bootcamp?.city?.country?.name} &bull; {activeReg?.bootcamp?.city?.name}
+              </p>
+
+              <div className="relative p-4 rounded-2xl bg-white shadow-lg">
+                <QRCodeSVG
+                  value={activeReg?.qrToken || "AFR-DEV"}
+                  size={200}
+                  level="H"
+                  includeMargin={true}
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-10 h-10 rounded-lg bg-slate-950 border-2 border-afr-amber flex items-center justify-center shadow-lg">
+                    <Zap className="w-5 h-5 text-afr-amber fill-afr-amber" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center space-y-1 w-full">
+                <p className="text-xs font-mono text-white/70">CRYPTOGRAPHIC QR TOKEN</p>
+                <p className="text-[11px] font-mono text-white bg-black/30 px-2 py-1 rounded border border-white/20 break-all">
+                  {activeReg?.qrToken}
                 </p>
+              </div>
 
-                <div className="relative p-4 rounded-2xl bg-white shadow-lg">
-                  <QRCodeSVG
-                    value={activeReg?.qrToken || "AFR-DEV"}
-                    size={200}
-                    level="H"
-                    includeMargin={true}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-10 h-10 rounded-lg bg-slate-950 border-2 border-afr-amber flex items-center justify-center shadow-lg">
-                      <Zap className="w-5 h-5 text-afr-amber fill-afr-amber" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-center space-y-1 w-full">
-                  <p className="text-xs font-mono text-white/70">CRYPTOGRAPHIC QR TOKEN</p>
-                  <p className="text-[11px] font-mono text-white bg-black/30 px-2 py-1 rounded border border-white/20 break-all">
-                    {activeReg?.qrToken}
-                  </p>
-                </div>
-
-                <div className="w-full bg-black/30 p-3 rounded-xl border border-yellow-500/20 space-y-2">
-                  <span className="text-xs font-mono text-yellow-200/60 block">5-DAY ATTENDANCE SCAN LOGS</span>
-                  <div className="grid grid-cols-5 gap-1.5 text-center">
-                    {[1, 2, 3, 4, 5].map((day) => {
-                      const log = activeReg?.attendanceLogs?.find((l: any) => l.dayNumber === day);
-                      return (
-                        <div
-                          key={day}
-                          className={`p-1.5 rounded-lg border text-[11px] font-mono font-bold ${
-                            log
-                              ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                              : "bg-yellow-500/5 border-yellow-500/15 text-yellow-200/30"
+              <div className="w-full bg-black/30 p-3 rounded-xl border border-yellow-500/20 space-y-2">
+                <span className="text-xs font-mono text-yellow-200/60 block">5-DAY ATTENDANCE SCAN LOGS</span>
+                <div className="grid grid-cols-5 gap-1.5 text-center">
+                  {[1, 2, 3, 4, 5].map((day) => {
+                    const log = activeReg?.attendanceLogs?.find((l: any) => l.dayNumber === day);
+                    return (
+                      <div
+                        key={day}
+                        className={`p-1.5 rounded-lg border text-[11px] font-mono font-bold ${log
+                            ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                            : "bg-yellow-500/5 border-yellow-500/15 text-yellow-200/30"
                           }`}
-                        >
-                          D{day}
-                          {log && <CheckCircle2 className="w-3 h-3 mx-auto mt-0.5" />}
-                        </div>
-                      );
-                    })}
-                  </div>
+                      >
+                        D{day}
+                        {log && <CheckCircle2 className="w-3 h-3 mx-auto mt-0.5" />}
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
             </div>
 
             <div className="rounded-xl afr-glass border border-slate-800 p-5 space-y-3">
@@ -405,13 +404,12 @@ export default function DeveloperPortal() {
                 <button
                   key={dayNum}
                   onClick={() => handleSelectDay(dayNum)}
-                  className={`flex-1 min-w-[80px] py-2.5 px-3 rounded-xl text-xs font-mono font-bold transition-all ${
-                    activeDay === dayNum
+                  className={`flex-1 min-w-[80px] py-2.5 px-3 rounded-xl text-xs font-mono font-bold transition-all ${activeDay === dayNum
                       ? dayNum === 5
                         ? "bg-afr-terracotta text-white shadow-glow-terracotta"
                         : "bg-afr-amber text-slate-950 shadow-glow-amber"
                       : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
-                  }`}
+                    }`}
                 >
                   DAY {dayNum} {dayNum === 5 ? "(HACKATHON)" : ""}
                 </button>
@@ -549,11 +547,10 @@ export default function DeveloperPortal() {
                               key={tIdx}
                               type="button"
                               onClick={() => toggleTaskCompleted(activeDay, tIdx)}
-                              className={`w-full flex items-center space-x-3 p-3 rounded-lg text-xs transition-all border text-left ${
-                                isDone
+                              className={`w-full flex items-center space-x-3 p-3 rounded-lg text-xs transition-all border text-left ${isDone
                                   ? "bg-afr-emerald/10 border-afr-emerald/30 text-afr-emerald font-semibold"
                                   : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                              }`}
+                                }`}
                             >
                               {isDone ? (
                                 <CheckSquare className="w-4 h-4 text-afr-emerald flex-shrink-0" />
@@ -654,11 +651,10 @@ export default function DeveloperPortal() {
                                 key={optIdx}
                                 type="button"
                                 onClick={() => handleAnswerSelect(q.id, optIdx)}
-                                className={`w-full text-left p-3 rounded-lg text-xs transition-all border ${
-                                  selectedAnswers[q.id] === optIdx
+                                className={`w-full text-left p-3 rounded-lg text-xs transition-all border ${selectedAnswers[q.id] === optIdx
                                     ? "bg-afr-amber/20 border-afr-amber text-afr-amber-light font-bold"
                                     : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
-                                }`}
+                                  }`}
                               >
                                 {opt}
                               </button>
@@ -723,25 +719,63 @@ export default function DeveloperPortal() {
                             </p>
                           </div>
                         ) : claimResult ? (
-                          <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/50 space-y-2">
+                          <div className="p-4 rounded-xl space-y-4 bg-amber-950/30 border border-amber-500/40">
                             <div className="flex items-center justify-between">
-                              <span className="font-bold text-emerald-300 text-sm flex items-center space-x-1.5">
+                              <span className="font-bold text-sm flex items-center space-x-1.5 text-amber-300">
                                 <Zap className="w-4 h-4 text-afr-amber fill-afr-amber" />
                                 <span>
                                   {claimResult.alreadyClaimed
                                     ? "Prize Previously Settled"
-                                    : claimResult.pending
-                                    ? "Invoice Submitted & Pending Organizer Payout!"
-                                    : "Lightning Payout Settled!"}
+                                    : "⚡ Winner Invoice Generated & Sent to Organizer!"}
                                 </span>
                               </span>
-                              <Badge variant={claimResult.pending ? "amber" : "emerald"}>
-                                {claimResult.pending ? "PENDING ORGANIZER APPROVAL ⚡" : "PAID ⚡"}
+                              <Badge variant={claimResult.alreadyClaimed ? "emerald" : "amber"}>
+                                {claimResult.alreadyClaimed ? "PAID ⚡" : "PENDING ORGANIZER PAYMENT ⚡"}
                               </Badge>
                             </div>
+
                             <p className="text-xs font-mono text-slate-300">
-                              Amount: <strong className="text-afr-amber">{claimResult.amountSats || prizeSats} SATS</strong> | Destination: <span className="underline">{claimResult.lightningAddress}</span>
+                              Amount: <strong className="text-afr-amber">{claimResult.amountSats || prizeSats} SATS</strong> | Rank: <strong>#{claimResult.rank}</strong> | Destination: <span className="underline">{claimResult.lightningAddress}</span>
                             </p>
+
+                            {/* Render Generated Invoice QR & BOLT11 for Developer */}
+                            {claimResult.bolt11 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center bg-slate-950/90 p-4 rounded-xl border border-slate-800">
+                                <div className="sm:col-span-1 flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-md">
+                                  <QRCodeSVG
+                                    value={claimResult.bolt11}
+                                    size={110}
+                                    level="M"
+                                    includeMargin={true}
+                                  />
+                                  <span className="text-[9px] font-mono font-bold text-slate-900 mt-1 uppercase text-center">
+                                    {claimResult.amountSats} Sats Invoice
+                                  </span>
+                                </div>
+
+                                <div className="sm:col-span-3 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-mono font-bold text-afr-amber uppercase">Generated BOLT11 Invoice:</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(claimResult.bolt11);
+                                        alert("⚡ BOLT11 invoice copied!");
+                                      }}
+                                      className="text-[10px] font-mono text-slate-300 hover:text-white underline"
+                                    >
+                                      📋 Copy BOLT11
+                                    </button>
+                                  </div>
+                                  <div className="max-h-20 overflow-y-auto bg-slate-900 p-2 rounded border border-slate-800">
+                                    <p className="text-[10px] font-mono text-amber-200/90 break-all select-all">
+                                      {claimResult.bolt11}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                             <p className="text-[11px] text-slate-400 font-mono">
                               {claimResult.message}
                             </p>
@@ -813,9 +847,8 @@ export default function DeveloperPortal() {
                         {leaderboard.map((entry: any) => (
                           <div key={entry.developerId} className="py-2 flex items-center justify-between text-xs">
                             <div className="flex items-center space-x-3">
-                              <span className={`font-mono font-bold w-6 h-6 rounded flex items-center justify-center text-[11px] ${
-                                entry.rank === 1 ? "bg-amber-500 text-slate-950" : entry.rank === 2 ? "bg-slate-300 text-slate-950" : entry.rank === 3 ? "bg-amber-700 text-white" : "bg-slate-900 text-slate-400"
-                              }`}>
+                              <span className={`font-mono font-bold w-6 h-6 rounded flex items-center justify-center text-[11px] ${entry.rank === 1 ? "bg-amber-500 text-slate-950" : entry.rank === 2 ? "bg-slate-300 text-slate-950" : entry.rank === 3 ? "bg-amber-700 text-white" : "bg-slate-900 text-slate-400"
+                                }`}>
                                 #{entry.rank}
                               </span>
                               <div>

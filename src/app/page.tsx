@@ -83,7 +83,7 @@ export default function HomePage() {
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     fetchCountries();
@@ -124,7 +124,7 @@ export default function HomePage() {
       if (res.data && res.data.length > 0) {
         setCities(res.data);
       }
-    } catch (e) {}
+    } catch (e) { }
     fetchBootcamps(undefined, countryId);
   };
 
@@ -336,11 +336,10 @@ export default function HomePage() {
 
                 {/* feedback */}
                 {registerMsg && registerMsg.id === bootcamp.id && (
-                  <div className={`p-3 rounded-lg text-xs flex items-start gap-2 border ${
-                    registerMsg.type === "success"
+                  <div className={`p-3 rounded-lg text-xs flex items-start gap-2 border ${registerMsg.type === "success"
                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
                       : "bg-red-500/10 border-red-500/30 text-red-300"
-                  }`}>
+                    }`}>
                     {registerMsg.type === "success"
                       ? <CheckCircle2 className="w-4 h-4 shrink-0" />
                       : <AlertCircle className="w-4 h-4 shrink-0" />}

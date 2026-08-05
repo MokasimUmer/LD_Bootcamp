@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import io, { Socket } from "socket.io-client";
 import { Zap, Camera, Shield, Plus, Trophy, CheckCircle2, AlertCircle, ExternalLink, Star, DollarSign, Users, MapPin, Edit3, X, Lock, Unlock, BookOpen, Save, Upload } from "lucide-react";
@@ -173,7 +174,7 @@ export default function OrganizerPortal() {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setOrganizerPayouts(res.data || []);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleSettleInvoice = async (payout: any, customPreimage?: string) => {
@@ -209,7 +210,7 @@ export default function OrganizerPortal() {
       return;
     }
     const parsed = JSON.parse(storedUser);
-    
+
     // Strict Role Separation Guard
     if (parsed.role !== "ORGANIZER" && parsed.role !== "ADMIN") {
       router.push("/developer");
@@ -237,7 +238,7 @@ export default function OrganizerPortal() {
         const currentBootcamp = res.data.find((b: any) => b.id === initialId) || res.data[0];
         populateBootcampFields(currentBootcamp);
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const populateBootcampFields = (b: any) => {
@@ -294,7 +295,7 @@ export default function OrganizerPortal() {
         setCities(res.data);
         setCreateCityId(res.data[0].id);
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleCreateBootcamp = async (e: React.FormEvent) => {
@@ -468,7 +469,7 @@ export default function OrganizerPortal() {
     try {
       const res = await axios.get(`http://localhost:4000/api/quiz/leaderboard/${bId}/day/${dayNum}`);
       setLeaderboard(res.data);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
@@ -514,7 +515,7 @@ export default function OrganizerPortal() {
           false
         );
         scannerRef.current = scanner;
-        scanner.render(onScanSuccess, (err) => {});
+        scanner.render(onScanSuccess, (err) => { });
       }, 100);
     }
   };
@@ -551,7 +552,7 @@ export default function OrganizerPortal() {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setSubmissions(res.data);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleGradeSubmission = async (subId: string, rating: number, comment: string) => {
@@ -563,7 +564,7 @@ export default function OrganizerPortal() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchSubmissions(selectedBootcampId, token);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleTriggerPayout = async (sub: any) => {
@@ -700,11 +701,10 @@ export default function OrganizerPortal() {
                 return (
                   <div
                     key={dNum}
-                    className={`p-4 rounded-xl border space-y-3 transition-all ${
-                      isUnlocked
+                    className={`p-4 rounded-xl border space-y-3 transition-all ${isUnlocked
                         ? "bg-emerald-950/20 border-emerald-500/40 shadow-glow-emerald"
                         : "bg-slate-950 border-slate-800"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-bold text-xs text-white">DAY {dNum} QUIZ</span>
@@ -795,7 +795,7 @@ export default function OrganizerPortal() {
                   .map((payout) => (
                     <div
                       key={payout.id}
-                      className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3"
+                      className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-4 shadow-lg"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-900 pb-3">
                         <div className="space-y-1">
@@ -815,23 +815,41 @@ export default function OrganizerPortal() {
                             size="sm"
                             onClick={() => {
                               navigator.clipboard.writeText(payout.bolt11);
-                              alert("⚡ BOLT11 invoice copied to clipboard! Paste it into Polar (Alice -> Pay Invoice).");
+                              alert("⚡ BOLT11 invoice copied to clipboard! Paste it into Polar or your Lightning wallet.");
                             }}
                             className="text-xs font-mono text-slate-300 border-slate-700 hover:border-afr-amber shrink-0"
                           >
-                            📋 Copy BOLT11 Invoice for Polar
+                            📋 Copy BOLT11 Invoice
                           </Button>
                         )}
                       </div>
 
-                      {payout.bolt11 && (
-                        <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 space-y-1">
-                          <span className="text-[10px] font-mono text-slate-400 block uppercase">BOLT11 Payment Request String:</span>
-                          <p className="text-[10px] font-mono text-afr-amber-light break-all bg-slate-950 p-2 rounded border border-slate-800 select-all">
-                            {payout.bolt11}
-                          </p>
+                      {/* QR Code & BOLT11 Invoice Display */}
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                        <div className="sm:col-span-1 flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-md border border-white/20">
+                          <QRCodeSVG
+                            value={payout.bolt11 || payout.lightningAddress || `lightning:${payout.lightningAddress}`}
+                            size={120}
+                            level="M"
+                            includeMargin={true}
+                          />
+                          <span className="text-[10px] font-mono font-bold text-slate-900 mt-1 uppercase text-center">
+                            Scan to Pay {payout.amountSats} Sats
+                          </span>
                         </div>
-                      )}
+
+                        <div className="sm:col-span-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-mono font-bold text-afr-amber uppercase">BOLT11 Payment Invoice String:</span>
+                            <span className="text-[10px] font-mono text-slate-400">Scan QR code or copy string below</span>
+                          </div>
+                          <div className="max-h-24 overflow-y-auto bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                            <p className="text-[11px] font-mono text-amber-200/90 break-all select-all leading-relaxed">
+                              {payout.bolt11 || "No BOLT11 string generated yet. Use Lightning Address above."}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
 
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
                         <Button
@@ -842,7 +860,7 @@ export default function OrganizerPortal() {
                           className="font-mono font-bold text-xs shrink-0 shadow-glow-amber h-9"
                         >
                           <Zap className="w-4 h-4 mr-1.5 fill-slate-950" />
-                          {settleLoading[payout.id] ? "Settling Payment..." : `⚡ Auto-Pay ${payout.amountSats} Sats (LND Node)`}
+                          {settleLoading[payout.id] ? "Settling Payment..." : `⚡ Pay ${payout.amountSats} Sats (LND Node)`}
                         </Button>
 
                         <div className="flex items-center space-x-2 w-full md:w-auto">
@@ -908,9 +926,8 @@ export default function OrganizerPortal() {
                       <button
                         key={d}
                         onClick={() => setScanDay(d)}
-                        className={`w-6 h-6 rounded text-[10px] font-mono font-bold ${
-                          scanDay === d ? "bg-afr-terracotta text-white" : "bg-slate-900 text-slate-500"
-                        }`}
+                        className={`w-6 h-6 rounded text-[10px] font-mono font-bold ${scanDay === d ? "bg-afr-terracotta text-white" : "bg-slate-900 text-slate-500"
+                          }`}
                       >
                         D{d}
                       </button>
@@ -940,11 +957,10 @@ export default function OrganizerPortal() {
                 {/* Scan Result Feedback */}
                 {scanResult && (
                   <div
-                    className={`p-4 rounded-xl text-xs space-y-2 border ${
-                      scanResult.type === "success"
+                    className={`p-4 rounded-xl text-xs space-y-2 border ${scanResult.type === "success"
                         ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-glow-emerald"
                         : "bg-red-500/10 border-red-500/30 text-red-300"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center space-x-2 font-bold text-sm">
                       {scanResult.type === "success" ? (
@@ -980,9 +996,8 @@ export default function OrganizerPortal() {
                       <button
                         key={d}
                         onClick={() => handleLeaderboardDayChange(d)}
-                        className={`px-2 py-1 rounded text-xs font-mono font-bold ${
-                          leaderboardDay === d ? "bg-afr-amber text-slate-950" : "bg-slate-900 text-slate-400"
-                        }`}
+                        className={`px-2 py-1 rounded text-xs font-mono font-bold ${leaderboardDay === d ? "bg-afr-amber text-slate-950" : "bg-slate-900 text-slate-400"
+                          }`}
                       >
                         DAY {d}
                       </button>
@@ -1005,21 +1020,19 @@ export default function OrganizerPortal() {
                     {leaderboard.map((item, index) => (
                       <div
                         key={item.developerId || index}
-                        className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                          index === 0
+                        className={`p-3 rounded-xl border flex items-center justify-between transition-all ${index === 0
                             ? "bg-amber-500/10 border-amber-500/50 shadow-glow-amber text-afr-amber-light"
                             : index === 1
-                            ? "bg-slate-900/80 border-slate-700 text-slate-200"
-                            : "bg-slate-950 border-slate-800 text-slate-400"
-                        }`}
+                              ? "bg-slate-900/80 border-slate-700 text-slate-200"
+                              : "bg-slate-950 border-slate-800 text-slate-400"
+                          }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-black text-sm ${
-                              index === 0
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-black text-sm ${index === 0
                                 ? "bg-afr-amber text-slate-950"
                                 : "bg-slate-800 text-slate-300"
-                            }`}
+                              }`}
                           >
                             #{item.rank || index + 1}
                           </div>
@@ -1127,11 +1140,10 @@ export default function OrganizerPortal() {
 
                         {payoutLogs[sub.id] && (
                           <div
-                            className={`p-2.5 rounded-lg text-xs font-mono ${
-                              payoutLogs[sub.id].type === "success"
+                            className={`p-2.5 rounded-lg text-xs font-mono ${payoutLogs[sub.id].type === "success"
                                 ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300"
                                 : "bg-red-500/10 border border-red-500/30 text-red-300"
-                            }`}
+                              }`}
                           >
                             <p>{payoutLogs[sub.id].text}</p>
                             {payoutLogs[sub.id].preimage && (
@@ -1177,7 +1189,68 @@ export default function OrganizerPortal() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-3 space-y-6">
+          {/* QR Scanner — distinct copper/bronze card */}
+          <div className="space-y-6">
+            <div className="card-scanner p-5">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                    <Camera className="w-5 h-5 text-amber-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-amber-100">QR Scanner</h3>
+                    <p className="text-xs text-amber-300/70">Day {scanDay} Check-In</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setScanDay(d)}
+                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${scanDay === d
+                          ? "bg-amber-400 text-slate-950 shadow-glow-terracotta"
+                          : "bg-amber-500/10 border border-amber-500/20 text-amber-300/60 hover:text-amber-200"
+                        }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                variant={scannerActive ? "outline" : "amber"}
+                size="md"
+                onClick={toggleScanner}
+                className={`w-full ${scannerActive ? "border-amber-500/40 text-amber-200" : "shadow-glow-gold"}`}
+              >
+                {scannerActive ? "Stop Camera Scanner" : "Activate PWA Camera Scanner"}
+              </Button>
+
+              <div id="qr-reader" className={`mt-4 w-full overflow-hidden rounded-lg border border-amber-500/20 bg-black/40 ${!scannerActive ? "hidden" : ""}`} />
+
+              {scanResult && (
+                <div className={`mt-4 p-4 rounded-lg text-sm space-y-2 border ${scanResult.type === "success"
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                    : "bg-red-500/10 border-red-500/30 text-red-300"
+                  }`}>
+                  <div className="flex items-center space-x-2 font-bold">
+                    {scanResult.type === "success"
+                      ? <CheckCircle2 className="w-5 h-5" />
+                      : <AlertCircle className="w-5 h-5" />}
+                    <span>{scanResult.text}</span>
+                  </div>
+                  {scanResult.data && (
+                    <p className="text-xs opacity-70">
+                      Developer: {scanResult.data.developer?.name} · Day {scanResult.data.dayNumber}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 space-y-6">
             {/* Leaderboard — deep navy card */}
             <div className="card-leaderboard p-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
@@ -1198,11 +1271,10 @@ export default function OrganizerPortal() {
                     <button
                       key={d}
                       onClick={() => handleLeaderboardDayChange(d)}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                        leaderboardDay === d
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${leaderboardDay === d
                           ? "bg-blue-500 text-white shadow-glow-navy"
                           : "bg-blue-500/10 border border-blue-500/20 text-blue-400/70 hover:text-blue-200"
-                      }`}
+                        }`}
                     >
                       D{d}
                     </button>
@@ -1219,23 +1291,21 @@ export default function OrganizerPortal() {
                   leaderboard.map((item, index) => (
                     <div
                       key={item.developerId || index}
-                      className={`p-4 rounded-lg flex items-center justify-between transition-all border ${
-                        index === 0
+                      className={`p-4 rounded-lg flex items-center justify-between transition-all border ${index === 0
                           ? "bg-yellow-400/10 border-yellow-400/40"
                           : index === 1
-                          ? "bg-slate-400/10 border-slate-400/30"
-                          : index === 2
-                          ? "bg-orange-500/10 border-orange-500/30"
-                          : "bg-blue-500/5 border-blue-500/15"
-                      }`}
+                            ? "bg-slate-400/10 border-slate-400/30"
+                            : index === 2
+                              ? "bg-orange-500/10 border-orange-500/30"
+                              : "bg-blue-500/5 border-blue-500/15"
+                        }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${
-                          index === 0 ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-slate-950"
-                          : index === 1 ? "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-900"
-                          : index === 2 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white"
-                          : "bg-blue-500/20 text-blue-300"
-                        }`}>
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${index === 0 ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-slate-950"
+                            : index === 1 ? "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-900"
+                              : index === 2 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white"
+                                : "bg-blue-500/20 text-blue-300"
+                          }`}>
                           #{item.rank || index + 1}
                         </div>
                         <div>
@@ -1347,11 +1417,10 @@ export default function OrganizerPortal() {
 
                           {payoutLogs[sub.id] && (
                             <div
-                              className={`p-3 rounded-lg text-sm font-mono ${
-                                payoutLogs[sub.id].type === "success"
+                              className={`p-3 rounded-lg text-sm font-mono ${payoutLogs[sub.id].type === "success"
                                   ? "bg-afr-emerald/20 border border-afr-emerald/50 text-afr-emerald"
                                   : "bg-afr-terracotta/20 border border-afr-terracotta/50 text-afr-terracotta-warm"
-                              }`}
+                                }`}
                             >
                               <p>{payoutLogs[sub.id].text}</p>
                               {payoutLogs[sub.id].preimage && (
@@ -1392,11 +1461,10 @@ export default function OrganizerPortal() {
                   <button
                     key={dNum}
                     onClick={() => handleCurrDaySelect(dNum)}
-                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
-                      currDay === dNum
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${currDay === dNum
                         ? "bg-afr-amber text-slate-950 shadow-glow-amber"
                         : "text-slate-400 hover:text-white hover:bg-slate-900"
-                    }`}
+                      }`}
                   >
                     DAY {dNum}
                   </button>
@@ -1445,155 +1513,155 @@ export default function OrganizerPortal() {
 
                 {/* Media Attachments & Learning Resources Section */}
                 <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-mono font-bold text-slate-200 uppercase flex items-center space-x-1.5">
-                      <ExternalLink className="w-4 h-4 text-afr-amber" />
-                      <span>Media Attachments & Learning Resources ({currResources.length})</span>
-                    </h4>
-                    <span className="text-[10px] text-slate-400">Photos, Videos, Spec Links & Docs</span>
-                  </div>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-mono font-bold text-slate-200 uppercase flex items-center space-x-1.5">
+                        <ExternalLink className="w-4 h-4 text-afr-amber" />
+                        <span>Media Attachments & Learning Resources ({currResources.length})</span>
+                      </h4>
+                      <span className="text-[10px] text-slate-400">Photos, Videos, Spec Links & Docs</span>
+                    </div>
 
-                  {/* List of Attached Resources */}
-                  {currResources.length > 0 && (
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                      {currResources.map((res, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 text-xs"
-                        >
-                          <div className="flex items-center space-x-2.5 overflow-hidden">
-                            <Badge
-                              variant={
-                                res.type === "IMAGE"
-                                  ? "amber"
-                                  : res.type === "VIDEO"
-                                  ? "terracotta"
-                                  : "emerald"
-                              }
-                              className="text-[9px] font-mono shrink-0"
-                            >
-                              {res.type}
-                            </Badge>
-                            <div className="truncate">
-                              <p className="font-bold text-white text-xs truncate">{res.title}</p>
-                              <a
-                                href={res.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[10px] text-afr-amber underline truncate block"
-                              >
-                                {res.url}
-                              </a>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveResource(idx)}
-                            className="text-slate-400 hover:text-red-400 p-1 shrink-0"
-                            title="Remove Resource"
+                    {/* List of Attached Resources */}
+                    {currResources.length > 0 && (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {currResources.map((res, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 text-xs"
                           >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                            <div className="flex items-center space-x-2.5 overflow-hidden">
+                              <Badge
+                                variant={
+                                  res.type === "IMAGE"
+                                    ? "amber"
+                                    : res.type === "VIDEO"
+                                      ? "terracotta"
+                                      : "emerald"
+                                }
+                                className="text-[9px] font-mono shrink-0"
+                              >
+                                {res.type}
+                              </Badge>
+                              <div className="truncate">
+                                <p className="font-bold text-white text-xs truncate">{res.title}</p>
+                                <a
+                                  href={res.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[10px] text-afr-amber underline truncate block"
+                                >
+                                  {res.url}
+                                </a>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveResource(idx)}
+                              className="text-slate-400 hover:text-red-400 p-1 shrink-0"
+                              title="Remove Resource"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                  {/* Hidden File Input for Device Uploads */}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    accept="image/*,video/*,application/pdf,.doc,.docx"
-                    className="hidden"
-                  />
+                    {/* Hidden File Input for Device Uploads */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept="image/*,video/*,application/pdf,.doc,.docx"
+                      className="hidden"
+                    />
 
-                  {/* New Resource Add Form */}
-                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-2 border-t border-slate-800/80">
-                    <div className="sm:col-span-3">
-                      <select
-                        value={newResType}
-                        onChange={(e: any) => setNewResType(e.target.value)}
-                        className="w-full h-9 px-2 rounded-lg border border-slate-800 bg-slate-900 text-xs font-mono text-slate-200"
-                      >
-                        <option value="IMAGE">📷 Photo / Diagram</option>
-                        <option value="VIDEO">🎥 Video (YouTube/MP4)</option>
-                        <option value="LINK">🔗 Web Link / Spec</option>
-                        <option value="DOCUMENT">📄 PDF / Document</option>
-                      </select>
+                    {/* New Resource Add Form */}
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-2 border-t border-slate-800/80">
+                      <div className="sm:col-span-3">
+                        <select
+                          value={newResType}
+                          onChange={(e: any) => setNewResType(e.target.value)}
+                          className="w-full h-9 px-2 rounded-lg border border-slate-800 bg-slate-900 text-xs font-mono text-slate-200"
+                        >
+                          <option value="IMAGE">📷 Photo / Diagram</option>
+                          <option value="VIDEO">🎥 Video (YouTube/MP4)</option>
+                          <option value="LINK">🔗 Web Link / Spec</option>
+                          <option value="DOCUMENT">📄 PDF / Document</option>
+                        </select>
+                      </div>
+                      <div className="sm:col-span-4">
+                        <Input
+                          placeholder="Title (e.g. LND Arch)"
+                          value={newResTitle}
+                          onChange={(e) => setNewResTitle(e.target.value)}
+                          className="h-9 text-xs"
+                        />
+                      </div>
+                      <div className="sm:col-span-5">
+                        <Input
+                          placeholder={newResUrl.startsWith("data:") ? "File Loaded from Device ✓" : "URL (https://...) or choose file below"}
+                          value={newResUrl}
+                          onChange={(e) => setNewResUrl(e.target.value)}
+                          className="h-9 text-xs"
+                        />
+                      </div>
                     </div>
-                    <div className="sm:col-span-4">
-                      <Input
-                        placeholder="Title (e.g. LND Arch)"
-                        value={newResTitle}
-                        onChange={(e) => setNewResTitle(e.target.value)}
-                        className="h-9 text-xs"
-                      />
-                    </div>
-                    <div className="sm:col-span-5">
-                      <Input
-                        placeholder={newResUrl.startsWith("data:") ? "File Loaded from Device ✓" : "URL (https://...) or choose file below"}
-                        value={newResUrl}
-                        onChange={(e) => setNewResUrl(e.target.value)}
-                        className="h-9 text-xs"
-                      />
-                    </div>
-                  </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="h-8 text-xs font-mono text-afr-amber border border-afr-amber/40 hover:bg-afr-amber/10"
+                        >
+                          <Upload className="w-3.5 h-3.5 mr-1" />
+                          <span>Choose File from Device</span>
+                        </Button>
+                        <Input
+                          placeholder="Short Description (optional)"
+                          value={newResDesc}
+                          onChange={(e) => setNewResDesc(e.target.value)}
+                          className="h-8 text-xs max-w-xs"
+                        />
+                      </div>
+
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="h-8 text-xs font-mono text-afr-amber border border-afr-amber/40 hover:bg-afr-amber/10"
+                        onClick={handleAddResource}
+                        className="h-8 text-xs font-mono"
                       >
-                        <Upload className="w-3.5 h-3.5 mr-1" />
-                        <span>Choose File from Device</span>
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Add Attachment
                       </Button>
-                      <Input
-                        placeholder="Short Description (optional)"
-                        value={newResDesc}
-                        onChange={(e) => setNewResDesc(e.target.value)}
-                        className="h-8 text-xs max-w-xs"
-                      />
                     </div>
+                  </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddResource}
-                      className="h-8 text-xs font-mono"
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2">Quiz Difficulty</label>
+                    <select
+                      value={currDifficulty}
+                      onChange={(e) => setCurrDifficulty(e.target.value)}
+                      className="w-full h-11 px-4 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm focus:ring-2 focus:ring-afr-amber focus:border-transparent"
                     >
-                      <Plus className="w-3.5 h-3.5 mr-1" /> Add Attachment
+                      <option value="EASY">EASY</option>
+                      <option value="MEDIUM">MEDIUM</option>
+                      <option value="HARD">HARD</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-4">
+                    <Button type="button" variant="ghost" onClick={() => setShowCurriculumModal(false)}>
+                      Close
+                    </Button>
+                    <Button type="submit" variant="amber" className="shadow-glow-amber">
+                      <Save className="w-4 h-4 mr-1.5" />
+                      Save Day {currDay} Curriculum
                     </Button>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2">Quiz Difficulty</label>
-                  <select
-                    value={currDifficulty}
-                    onChange={(e) => setCurrDifficulty(e.target.value)}
-                    className="w-full h-11 px-4 rounded-lg border border-slate-800 bg-slate-950 text-white text-sm focus:ring-2 focus:ring-afr-amber focus:border-transparent"
-                  >
-                    <option value="EASY">EASY</option>
-                    <option value="MEDIUM">MEDIUM</option>
-                    <option value="HARD">HARD</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-4">
-                  <Button type="button" variant="ghost" onClick={() => setShowCurriculumModal(false)}>
-                    Close
-                  </Button>
-                  <Button type="submit" variant="amber" className="shadow-glow-amber">
-                    <Save className="w-4 h-4 mr-1.5" />
-                    Save Day {currDay} Curriculum
-                  </Button>
-                </div>
               </form>
             </div>
           </div>
