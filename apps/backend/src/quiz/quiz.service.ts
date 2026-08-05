@@ -259,7 +259,9 @@ export class QuizService {
       select: { id: true, name: true, email: true, lightningAddress: true },
     });
 
-    const devMap = new Map(developers.map((d) => [d.id, d]));
+    const devMap = new Map<string, { id: string; name: string; email: string; lightningAddress: string | null }>(
+      developers.map((d) => [d.id, d])
+    );
 
     return rawRanks.map((r, index) => {
       const dev = devMap.get(r.developerId);
