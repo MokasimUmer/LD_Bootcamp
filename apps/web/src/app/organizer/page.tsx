@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { Html5Qrcode } from "html5-qrcode";
 import io, { Socket } from "socket.io-client";
-import { Zap, Camera, Shield, Plus, Trophy, CheckCircle2, AlertCircle, ExternalLink, Star, DollarSign, Users, MapPin, Edit3, X, Lock, Unlock, BookOpen, Save, Upload } from "lucide-react";
+import { Zap, Camera, Shield, Plus, Trophy, CheckCircle2, AlertCircle, ExternalLink, Star, DollarSign, Users, MapPin, Edit3, X, Lock, Unlock, BookOpen, Save, Upload, XCircle, Clock, StopCircle, PlayCircle, RefreshCw } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -162,6 +162,28 @@ export default function OrganizerPortal() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const qrFileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Attendance Roster & Session State
+  const [attendanceData, setAttendanceData] = useState<{
+    bootcampId: string;
+    closedDays: number[];
+    curriculum: any[];
+    registrations: any[];
+  } | null>(null);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [sessionToggling, setSessionToggling] = useState(false);
+
+  // Big Prominent Scan Pop-up Modal State
+  const [scanPopup, setScanPopup] = useState<{
+    show: boolean;
+    type: "success" | "error";
+    title: string;
+    message: string;
+    developerName?: string;
+    developerEmail?: string;
+    dayNumber?: number;
+    scannedAt?: string;
+  } | null>(null);
+
   // Live Leaderboard & WebSocket
   const [leaderboardDay, setLeaderboardDay] = useState<number>(1);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
@@ -231,6 +253,61 @@ export default function OrganizerPortal() {
     fetchCountries();
   }, []);
 
+  useEffect(() => {
+    if (scanPopup?.show && scanPopup.type === "success") {
+      const timer = setTimeout(() => {
+        setScanPopup(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [scanPopup]);
+
+  const fetchAttendanceRoster = async (bootcampId: string, token?: string) => {
+    const authToken = token || localStorage.getItem("afr_token");
+    setAttendanceLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/attendance/bootcamp/${bootcampId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      setAttendanceData(res.data);
+    } catch (e) {
+      console.error("Failed to fetch attendance roster:", e);
+    } finally {
+      setAttendanceLoading(false);
+    }
+  };
+
+  const handleToggleDaySession = async (dayNum: number) => {
+    if (!selectedBootcampId) return;
+    const isCurrentlyClosed = attendanceData?.closedDays?.includes(dayNum);
+    const actionWord = isCurrentlyClosed ? "REOPEN" : "STOP & CLOSE";
+    const confirmMsg = isCurrentlyClosed
+      ? `Reopen attendance scanning for Day ${dayNum}?`
+      : `End/Stop Day ${dayNum} attendance session? Unscanned attendees will turn RED (Absent).`;
+
+    if (!confirm(confirmMsg)) return;
+
+    setSessionToggling(true);
+    const token = localStorage.getItem("afr_token");
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/api/attendance/bootcamp/${selectedBootcampId}/day/${dayNum}/toggle-session`,
+        { closed: !isCurrentlyClosed },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await fetchAttendanceRoster(selectedBootcampId, token!);
+      await fetchBootcamps(token!);
+      setScanResult({
+        type: !isCurrentlyClosed ? "error" : "success",
+        text: res.data.message,
+      });
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to toggle day session.");
+    } finally {
+      setSessionToggling(false);
+    }
+  };
+
   const fetchBootcamps = async (token?: string) => {
     const authToken = token || localStorage.getItem("afr_token");
     try {
@@ -241,6 +318,7 @@ export default function OrganizerPortal() {
         setSelectedBootcampId(initialId);
         fetchSubmissions(initialId, authToken);
         fetchBootcampPayouts(initialId, authToken);
+        fetchAttendanceRoster(initialId, authToken);
         setupWebSocket(initialId, 1);
 
         const currentBootcamp = res.data.find((b: any) => b.id === initialId) || res.data[0];
@@ -493,6 +571,7 @@ export default function OrganizerPortal() {
     setSelectedBootcampId(bId);
     fetchSubmissions(bId);
     fetchBootcampPayouts(bId);
+    fetchAttendanceRoster(bId);
     setupWebSocket(bId, leaderboardDay);
 
     const target = bootcamps.find((b) => b.id === bId);
@@ -643,15 +722,37 @@ export default function OrganizerPortal() {
         {
           qrToken: cleanToken,
           dayNumber: scanDay,
+          bootcampId: selectedBootcampId,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setScanResult({ type: "success", text: res.data.message, data: res.data });
+      setScanPopup({
+        show: true,
+        type: "success",
+        title: "CHECK-IN VERIFIED (OK)",
+        message: res.data.message,
+        developerName: res.data.developer?.name,
+        developerEmail: res.data.developer?.email,
+        dayNumber: res.data.dayNumber,
+        scannedAt: res.data.scannedAt,
+      });
       setManualQrToken("");
+      if (selectedBootcampId) {
+        fetchAttendanceRoster(selectedBootcampId, token!);
+      }
     } catch (err: any) {
+      const errMsg = err.response?.data?.message || "Failed to record attendance.";
       setScanResult({
         type: "error",
-        text: err.response?.data?.message || "Failed to record attendance.",
+        text: errMsg,
+      });
+      setScanPopup({
+        show: true,
+        type: "error",
+        title: "CHECK-IN REJECTED",
+        message: errMsg,
+        dayNumber: scanDay,
       });
     }
   };
@@ -1040,33 +1141,107 @@ export default function OrganizerPortal() {
       ) : (
         /* Main Organizer Layout */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: PWA Camera Scanner */}
+          {/* Left Column: PWA Camera Scanner & Attendance Roster */}
           <div className="space-y-6">
             <Card className="afr-card border-slate-800 shadow-glow-terracotta/10">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <Badge variant="terracotta">PWA SCANNER</Badge>
                   <div className="flex items-center space-x-1">
-                    {[1, 2, 3, 4, 5].map((d) => (
-                      <button
-                        key={d}
-                        onClick={() => setScanDay(d)}
-                        className={`w-6 h-6 rounded text-[10px] font-mono font-bold ${scanDay === d ? "bg-afr-terracotta text-white" : "bg-slate-900 text-slate-500"
+                    {[1, 2, 3, 4, 5].map((d) => {
+                      const isClosed = attendanceData?.closedDays?.includes(d);
+                      return (
+                        <button
+                          key={d}
+                          onClick={() => setScanDay(d)}
+                          className={`relative px-2 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+                            scanDay === d
+                              ? "bg-afr-terracotta text-white shadow-glow-terracotta"
+                              : isClosed
+                              ? "bg-red-500/10 border border-red-500/30 text-red-300"
+                              : "bg-slate-900 text-slate-400 hover:text-white"
                           }`}
-                      >
-                        D{d}
-                      </button>
-                    ))}
+                        >
+                          D{d}
+                          {isClosed && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 absolute top-0.5 right-0.5" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <CardTitle className="text-xl flex items-center space-x-2 mt-2">
                   <Camera className="w-5 h-5 text-afr-terracotta-warm" />
                   <span>Daily QR Check-In Scanner</span>
                 </CardTitle>
-                <CardDescription>Scan developer badges for Day {scanDay}</CardDescription>
+                <CardDescription>
+                  Scan & verify developer badges for Day {scanDay}
+                </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
+                {/* Session Status & End Session Action Bar */}
+                {(() => {
+                  const isDayClosed = attendanceData?.closedDays?.includes(scanDay);
+                  const regList = attendanceData?.registrations || [];
+                  const presCount = regList.filter(
+                    (r: any) => r.daysStatus?.[scanDay]?.status === "PRESENT"
+                  ).length;
+                  const absCount = regList.filter(
+                    (r: any) => r.daysStatus?.[scanDay]?.status === "ABSENT"
+                  ).length;
+
+                  return (
+                    <div
+                      className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                        isDayClosed
+                          ? "bg-red-500/10 border-red-500/30 text-red-200"
+                          : "bg-emerald-500/10 border-emerald-500/30 text-emerald-200"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2 text-xs font-mono">
+                        <span
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            isDayClosed ? "bg-red-500" : "bg-emerald-400 animate-pulse"
+                          }`}
+                        />
+                        <div>
+                          <span className="font-bold block">
+                            {isDayClosed
+                              ? `Day ${scanDay} Session: CLOSED`
+                              : `Day ${scanDay} Session: ACTIVE`}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {presCount} Present &bull; {absCount} Absent
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={isDayClosed ? "emerald" : "terracotta"}
+                        disabled={sessionToggling}
+                        onClick={() => handleToggleDaySession(scanDay)}
+                        className="text-xs h-8 px-3 whitespace-nowrap shadow-sm font-mono"
+                      >
+                        {isDayClosed ? (
+                          <>
+                            <PlayCircle className="w-3.5 h-3.5 mr-1" />
+                            <span>Reopen Day {scanDay}</span>
+                          </>
+                        ) : (
+                          <>
+                            <StopCircle className="w-3.5 h-3.5 mr-1" />
+                            <span>End Day {scanDay} Session</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })()}
+
                 {/* Camera Selector (if multiple cameras detected) */}
                 {cameras.length > 1 && (
                   <div>
@@ -1121,8 +1296,9 @@ export default function OrganizerPortal() {
                 {/* Camera Scanner Viewport */}
                 <div
                   id="qr-reader"
-                  className={`w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 min-h-[200px] ${!scannerActive ? "hidden" : ""
-                    }`}
+                  className={`w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 min-h-[200px] ${
+                    !scannerActive ? "hidden" : ""
+                  }`}
                 />
                 <div id="qr-reader-hidden" className="hidden" />
 
@@ -1137,10 +1313,11 @@ export default function OrganizerPortal() {
                 {/* Scan Result Feedback */}
                 {scanResult && (
                   <div
-                    className={`p-4 rounded-xl text-xs space-y-2 border ${scanResult.type === "success"
+                    className={`p-4 rounded-xl text-xs space-y-2 border ${
+                      scanResult.type === "success"
                         ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-glow-emerald"
                         : "bg-red-500/10 border-red-500/30 text-red-300"
-                      }`}
+                    }`}
                   >
                     <div className="flex items-center space-x-2 font-bold text-sm">
                       {scanResult.type === "success" ? (
@@ -1181,6 +1358,144 @@ export default function OrganizerPortal() {
                       {manualLoading ? "..." : "Check In"}
                     </Button>
                   </form>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Live Attendance Roster & 5-Day Matrix Card */}
+            <Card className="afr-card border-slate-800 shadow-glow-amber/5">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <Badge variant="amber">DAY {scanDay} ROSTER</Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => selectedBootcampId && fetchAttendanceRoster(selectedBootcampId)}
+                    disabled={attendanceLoading}
+                    className="h-7 px-2 text-xs text-slate-400 hover:text-white"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 mr-1 ${attendanceLoading ? "animate-spin" : ""}`} />
+                    <span>Refresh</span>
+                  </Button>
+                </div>
+                <CardTitle className="text-lg flex items-center space-x-2 mt-1">
+                  <Users className="w-4 h-4 text-afr-amber" />
+                  <span>Bootcamp Attendance Roster</span>
+                </CardTitle>
+                <CardDescription>
+                  {(attendanceData?.registrations || []).length} total enrolled &bull;{" "}
+                  {(attendanceData?.registrations || []).filter(
+                    (r: any) => r.daysStatus?.[scanDay]?.status === "PRESENT"
+                  ).length}{" "}
+                  present on Day {scanDay}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-3 pt-0">
+                {/* Summary counters */}
+                {(() => {
+                  const regList = attendanceData?.registrations || [];
+                  const presCount = regList.filter(
+                    (r: any) => r.daysStatus?.[scanDay]?.status === "PRESENT"
+                  ).length;
+                  const absCount = regList.filter(
+                    (r: any) => r.daysStatus?.[scanDay]?.status === "ABSENT"
+                  ).length;
+
+                  return (
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                      <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                        <span className="text-slate-400 text-[10px] block">ENROLLED</span>
+                        <span className="text-white font-bold text-sm">{regList.length}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                        <span className="text-emerald-400 text-[10px] block">PRESENT</span>
+                        <span className="text-emerald-300 font-bold text-sm">{presCount}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30">
+                        <span className="text-red-400 text-[10px] block">ABSENT</span>
+                        <span className="text-red-300 font-bold text-sm">{absCount}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Attendee List */}
+                <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                  {(!attendanceData?.registrations || attendanceData.registrations.length === 0) ? (
+                    <p className="text-xs text-slate-500 text-center py-4">No developers enrolled yet.</p>
+                  ) : (
+                    attendanceData.registrations.map((reg: any) => {
+                      const isPresentToday = reg.daysStatus?.[scanDay]?.status === "PRESENT";
+                      const isAbsentToday = reg.daysStatus?.[scanDay]?.status === "ABSENT";
+
+                      return (
+                        <div
+                          key={reg.registrationId}
+                          className={`p-2.5 rounded-xl border text-xs space-y-1.5 transition-all ${
+                            isPresentToday
+                              ? "bg-emerald-500/5 border-emerald-500/30"
+                              : isAbsentToday
+                              ? "bg-red-500/5 border-red-500/30"
+                              : "bg-slate-950 border-slate-800"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="truncate pr-2">
+                              <span className="font-bold text-white block truncate">{reg.developer?.name}</span>
+                              <span className="text-[10px] text-slate-400 font-mono truncate block">{reg.developer?.email}</span>
+                            </div>
+
+                            {/* Status Pill / Quick Check-In Button */}
+                            {isPresentToday ? (
+                              <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-bold flex items-center shrink-0">
+                                <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400" />
+                                PRESENT
+                              </span>
+                            ) : isAbsentToday ? (
+                              <span className="px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-mono font-bold flex items-center shrink-0">
+                                <XCircle className="w-3 h-3 mr-1 text-red-400" />
+                                ABSENT
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="amber"
+                                onClick={() => handleProcessCheckIn(reg.qrToken)}
+                                className="h-6 text-[10px] px-2 py-0 font-mono font-bold shrink-0"
+                              >
+                                Check In
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* 5-Day Mini Indicators */}
+                          <div className="flex items-center space-x-1 pt-1 border-t border-slate-800/60">
+                            {[1, 2, 3, 4, 5].map((d) => {
+                              const st = reg.daysStatus?.[d]?.status;
+                              const isAtt = st === "PRESENT";
+                              const isAbs = st === "ABSENT";
+                              return (
+                                <span
+                                  key={d}
+                                  title={`Day ${d}: ${st}`}
+                                  className={`text-[9px] font-mono px-1.5 py-0.5 rounded border font-bold ${
+                                    isAtt
+                                      ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
+                                      : isAbs
+                                      ? "bg-red-500/20 border-red-500/50 text-red-400"
+                                      : "bg-slate-900 border-slate-800 text-slate-500"
+                                  }`}
+                                >
+                                  D{d}:{isAtt ? "✓" : isAbs ? "✗" : "·"}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1760,6 +2075,102 @@ export default function OrganizerPortal() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Prominent Check-In Pop-Up Modal (Success OK vs Error Rejected) */}
+      {scanPopup?.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
+          <div
+            className={`w-full max-w-md rounded-3xl p-6 sm:p-8 text-center space-y-5 border shadow-2xl transition-all ${
+              scanPopup.type === "success"
+                ? "bg-slate-900 border-emerald-500/50 shadow-glow-emerald"
+                : "bg-slate-900 border-red-500/50 shadow-glow-terracotta"
+            }`}
+          >
+            {/* Animated Glow Circle with Icon */}
+            <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
+              <div
+                className={`absolute inset-0 rounded-full animate-ping opacity-25 ${
+                  scanPopup.type === "success" ? "bg-emerald-500" : "bg-red-500"
+                }`}
+              />
+              <div
+                className={`w-24 h-24 rounded-full border-4 flex items-center justify-center shadow-lg ${
+                  scanPopup.type === "success"
+                    ? "bg-emerald-500/20 border-emerald-400 text-emerald-400"
+                    : "bg-red-500/20 border-red-400 text-red-400"
+                }`}
+              >
+                {scanPopup.type === "success" ? (
+                  <CheckCircle2 className="w-14 h-14" />
+                ) : (
+                  <XCircle className="w-14 h-14" />
+                )}
+              </div>
+            </div>
+
+            {/* Title & Status */}
+            <div className="space-y-1">
+              <span
+                className={`text-[11px] font-mono font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border ${
+                  scanPopup.type === "success"
+                    ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                    : "bg-red-500/10 text-red-300 border-red-500/30"
+                }`}
+              >
+                {scanPopup.type === "success" ? "VERIFICATION OK" : "VERIFICATION FAILED"}
+              </span>
+              <h3 className="text-2xl font-bold font-display text-white pt-2">
+                {scanPopup.title}
+              </h3>
+              <p
+                className={`text-sm leading-relaxed ${
+                  scanPopup.type === "success" ? "text-emerald-200/90" : "text-red-200/90"
+                }`}
+              >
+                {scanPopup.message}
+              </p>
+            </div>
+
+            {/* Developer Metadata (if available) */}
+            {scanPopup.developerName && (
+              <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-left space-y-2 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Developer:</span>
+                  <span className="text-white font-bold">{scanPopup.developerName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Email:</span>
+                  <span className="text-slate-200 truncate max-w-[200px]">{scanPopup.developerEmail}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Day Scanned:</span>
+                  <span className="text-afr-amber font-bold">DAY {scanPopup.dayNumber}</span>
+                </div>
+                {scanPopup.scannedAt && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Time:</span>
+                    <span className="text-slate-300">
+                      {new Date(scanPopup.scannedAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-2">
+              <Button
+                variant={scanPopup.type === "success" ? "emerald" : "terracotta"}
+                size="lg"
+                onClick={() => setScanPopup(null)}
+                className="w-full shadow-lg font-bold"
+              >
+                {scanPopup.type === "success" ? "OK & Scan Next Student" : "Dismiss / Try Again"}
+              </Button>
+            </div>
           </div>
         </div>
       )}

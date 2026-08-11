@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { Zap, Award, QrCode, BookOpen, CheckCircle2, Trophy, Send, Edit3, AlertCircle, ArrowRight, Shield, Lock, CheckSquare, Square, ExternalLink } from "lucide-react";
+import { Zap, Award, QrCode, BookOpen, CheckCircle2, Trophy, Send, Edit3, AlertCircle, ArrowRight, Shield, Lock, CheckSquare, Square, ExternalLink, XCircle, Clock } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -355,21 +355,57 @@ export default function DeveloperPortal() {
                 </p>
               </div>
 
-              <div className="w-full bg-black/30 p-3 rounded-xl border border-yellow-500/20 space-y-2">
-                <span className="text-xs font-mono text-yellow-200/60 block">5-DAY ATTENDANCE SCAN LOGS</span>
-                <div className="grid grid-cols-5 gap-1.5 text-center">
+              <div className="w-full bg-black/40 p-3.5 rounded-xl border border-yellow-500/20 space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-yellow-200/80 font-bold">5-DAY ATTENDANCE STATUS</span>
+                  <span className="text-[10px] text-slate-400">
+                    {activeReg?.attendanceLogs?.length || 0} / 5 Days
+                  </span>
+                </div>
+                <div className="grid grid-cols-5 gap-2 text-center">
                   {[1, 2, 3, 4, 5].map((day) => {
                     const log = activeReg?.attendanceLogs?.find((l: any) => l.dayNumber === day);
+                    const curriculum = (activeReg?.bootcamp?.curriculum as any[]) || [];
+                    const dayCurriculum = curriculum.find((c: any) => c.day === day);
+                    const isClosed = !!dayCurriculum?.attendanceClosed;
+
+                    if (log) {
+                      return (
+                        <div
+                          key={day}
+                          className="p-2 rounded-xl border text-[11px] font-mono font-bold bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-glow-emerald flex flex-col items-center justify-center space-y-0.5"
+                          title={`Day ${day}: Present (Scanned at ${new Date(log.scannedAt).toLocaleTimeString()})`}
+                        >
+                          <span>D{day}</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-[9px] uppercase tracking-tighter text-emerald-400 font-extrabold">PRESENT</span>
+                        </div>
+                      );
+                    }
+
+                    if (isClosed) {
+                      return (
+                        <div
+                          key={day}
+                          className="p-2 rounded-xl border text-[11px] font-mono font-bold bg-red-500/20 border-red-500/50 text-red-300 flex flex-col items-center justify-center space-y-0.5"
+                          title={`Day ${day}: Absent (Session closed)`}
+                        >
+                          <span>D{day}</span>
+                          <XCircle className="w-3.5 h-3.5 text-red-400" />
+                          <span className="text-[9px] uppercase tracking-tighter text-red-400 font-extrabold">ABSENT</span>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div
                         key={day}
-                        className={`p-1.5 rounded-lg border text-[11px] font-mono font-bold ${log
-                            ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                            : "bg-yellow-500/5 border-yellow-500/15 text-yellow-200/30"
-                          }`}
+                        className="p-2 rounded-xl border text-[11px] font-mono font-bold bg-amber-500/10 border-amber-500/30 text-amber-200/70 flex flex-col items-center justify-center space-y-0.5"
+                        title={`Day ${day}: Session open / Pending scan`}
                       >
-                        D{day}
-                        {log && <CheckCircle2 className="w-3 h-3 mx-auto mt-0.5" />}
+                        <span>D{day}</span>
+                        <Clock className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-[9px] uppercase tracking-tighter text-amber-300/80 font-medium">OPEN</span>
                       </div>
                     );
                   })}
