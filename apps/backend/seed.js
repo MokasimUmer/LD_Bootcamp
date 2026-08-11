@@ -74,32 +74,7 @@ const COUNTRY_CODES = {
 };
 
 async function main() {
-  console.log('Seeding 54 African countries and cities...');
-  let countryCount = 0;
-  let cityCount = 0;
-
-  for (const [countryName, cityList] of Object.entries(AFRICAN_LOCATIONS_DATA)) {
-    const code = COUNTRY_CODES[countryName] || countryName.substring(0, 2).toUpperCase();
-    const country = await prisma.country.upsert({
-      where: { code },
-      update: { name: countryName },
-      create: { name: countryName, code }
-    });
-    countryCount++;
-
-    for (const cityName of cityList) {
-      await prisma.city.upsert({
-        where: { name_countryId: { name: cityName, countryId: country.id } },
-        update: {},
-        create: { name: cityName, countryId: country.id }
-      });
-      cityCount++;
-    }
-  }
-
-  console.log(`SUCCESS: Seeded ${countryCount} African countries and ${cityCount} cities to database.`);
-
-  console.log('Seeding known hardcoded organizer accounts...');
+  console.log('1. Seeding known admin & organizer accounts...');
   const bcrypt = require('bcrypt');
   const salt = await bcrypt.genSalt(10);
 
@@ -112,7 +87,11 @@ async function main() {
     const hash = await bcrypt.hash(org.password, salt);
     await prisma.user.upsert({
       where: { email: org.email },
-      update: { role: org.role },
+      update: { 
+        role: org.role,
+        passwordHash: hash,
+        name: org.name,
+      },
       create: {
         email: org.email,
         passwordHash: hash,
@@ -121,8 +100,37 @@ async function main() {
         lightningAddress: `${org.role.toLowerCase()}@getalby.com`,
       },
     });
+    console.log(`  ✔ Seeded ${org.role}: ${org.email}`);
   }
-  console.log('SUCCESS: Seeded known organizer credentials (organizer@afr.lightning & admin@afr.lightning).');
+
+  console.log('2. Seeding 54 African countries and cities...');
+  let countryCount = 0;
+  let cityCount = 0;
+
+  for (const [countryName, cityList] of Object.entries(AFRICAN_LOCATIONS_DATA)) {
+    try {
+      const code = COUNTRY_CODES[countryName] || countryName.substring(0, 2).toUpperCase();
+      const country = await prisma.country.upsert({
+        where: { code },
+        update: { name: countryName },
+        create: { name: countryName, code }
+      });
+      countryCount++;
+
+      for (const cityName of cityList) {
+        await prisma.city.upsert({
+          where: { name_countryId: { name: cityName, countryId: country.id } },
+          update: {},
+          create: { name: cityName, countryId: country.id }
+        });
+        cityCount++;
+      }
+    } catch (err) {
+      console.warn(`  ⚠️ Warning during seeding ${countryName}:`, err.message);
+    }
+  }
+
+  console.log(`SUCCESS: All seed operations complete! (${countryCount} countries, ${cityCount} cities)`);
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
