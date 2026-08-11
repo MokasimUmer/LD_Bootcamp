@@ -38,3 +38,13 @@ export class UpdateLightningAddressDto {
   @IsNotEmpty()
   lightningAddress: string;
 }
+
+export class ResetPasswordDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  newPassword: string;
+}

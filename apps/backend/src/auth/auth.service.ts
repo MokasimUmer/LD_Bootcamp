@@ -2,7 +2,7 @@ import { Injectable, ConflictException, UnauthorizedException, NotFoundException
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { RegisterDto, LoginDto, UpdateLightningAddressDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, UpdateLightningAddressDto, ResetPasswordDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -176,5 +176,30 @@ export class AuthService {
     });
 
     return user;
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const inputEmail = dto.email.toLowerCase().trim();
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: inputEmail },
+    });
+
+    if (!user) {
+      throw new NotFoundException('No account found with this email address');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(dto.newPassword, salt);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+
+    return {
+      message: 'Password has been successfully updated. You can now log in.',
+      email: inputEmail,
+    };
   }
 }
