@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import io, { Socket } from "socket.io-client";
 import { Zap, Camera, Shield, Plus, Trophy, CheckCircle2, AlertCircle, ExternalLink, Star, DollarSign, Users, MapPin, Edit3, X, Lock, Unlock, BookOpen, Save, Upload } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -153,7 +153,14 @@ export default function OrganizerPortal() {
   const [scanDay, setScanDay] = useState<number>(1);
   const [scanResult, setScanResult] = useState<any>(null);
   const [scannerActive, setScannerActive] = useState(false);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const [scannerLoading, setScannerLoading] = useState(false);
+  const [scannerError, setScannerError] = useState("");
+  const [manualQrToken, setManualQrToken] = useState("");
+  const [manualLoading, setManualLoading] = useState(false);
+  const [cameras, setCameras] = useState<Array<{ id: string; label: string }>>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>("");
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const qrFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Live Leaderboard & WebSocket
   const [leaderboardDay, setLeaderboardDay] = useState<number>(1);
@@ -501,43 +508,146 @@ export default function OrganizerPortal() {
     }
   };
 
-  const toggleScanner = () => {
-    if (scannerActive) {
+  const startCameraScanner = async (cameraIdToUse?: string) => {
+    setScannerLoading(true);
+    setScannerError("");
+    setScanResult(null);
+
+    try {
       if (scannerRef.current) {
-        scannerRef.current.clear();
+        try {
+          if (scannerRef.current.isScanning) {
+            await scannerRef.current.stop();
+          }
+          scannerRef.current.clear();
+        } catch (e) { }
+      }
+
+      setScannerActive(true);
+
+      // Allow DOM to mount #qr-reader
+      await new Promise((r) => setTimeout(r, 100));
+
+      const html5QrCode = new Html5Qrcode("qr-reader");
+      scannerRef.current = html5QrCode;
+
+      // Enumerate camera devices
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          setCameras(devices);
+          if (!selectedCameraId && !cameraIdToUse) {
+            const backCam = devices.find(
+              (d) => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("environment")
+            );
+            const targetId = backCam ? backCam.id : devices[0].id;
+            setSelectedCameraId(targetId);
+            cameraIdToUse = targetId;
+          }
+        }
+      } catch (camErr) {
+        console.warn("Camera enumeration warning:", camErr);
+      }
+
+      const cameraConfig = cameraIdToUse
+        ? { deviceId: { exact: cameraIdToUse } }
+        : { facingMode: "environment" };
+
+      await html5QrCode.start(
+        cameraConfig,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+        },
+        (decodedText) => {
+          handleProcessCheckIn(decodedText);
+        },
+        () => {
+          // ignore frame decode noise
+        }
+      );
+    } catch (err: any) {
+      console.error("Camera scanner start error:", err);
+      const errMsg = err?.message || String(err);
+      if (errMsg.includes("NotAllowedError") || errMsg.includes("Permission") || errMsg.includes("denied")) {
+        setScannerError("Camera permission denied. Please allow camera access in your browser or use image upload / manual token input below.");
+      } else if (errMsg.includes("NotFoundError") || errMsg.includes("Requested device not found")) {
+        setScannerError("No camera detected on this device. You can upload a QR image or enter the token manually below.");
+      } else {
+        setScannerError(`Camera error: ${errMsg}. Try uploading a QR image or enter the token manually.`);
       }
       setScannerActive(false);
-    } else {
-      setScannerActive(true);
-      setTimeout(() => {
-        const scanner = new Html5QrcodeScanner(
-          "qr-reader",
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          false
-        );
-        scannerRef.current = scanner;
-        scanner.render(onScanSuccess, (err) => { });
-      }, 100);
+    } finally {
+      setScannerLoading(false);
     }
   };
 
-  const onScanSuccess = async (decodedText: string) => {
+  const stopCameraScanner = async () => {
     if (scannerRef.current) {
-      scannerRef.current.clear();
+      try {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        scannerRef.current.clear();
+      } catch (e) { }
     }
     setScannerActive(false);
+    setScannerLoading(false);
+  };
+
+  const toggleScanner = () => {
+    if (scannerActive) {
+      stopCameraScanner();
+    } else {
+      startCameraScanner(selectedCameraId);
+    }
+  };
+
+  const handleCameraChange = async (newCameraId: string) => {
+    setSelectedCameraId(newCameraId);
+    if (scannerActive) {
+      await stopCameraScanner();
+      await startCameraScanner(newCameraId);
+    }
+  };
+
+  const handleFileUploadScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setScannerError("");
+    setScanResult(null);
+
+    try {
+      const html5QrCode = new Html5Qrcode("qr-reader-hidden");
+      const decodedText = await html5QrCode.scanFile(file, true);
+      html5QrCode.clear();
+      handleProcessCheckIn(decodedText);
+    } catch (err: any) {
+      setScannerError("No QR code detected in the selected image. Please try a clearer picture or enter the token manually.");
+    } finally {
+      if (qrFileInputRef.current) {
+        qrFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleProcessCheckIn = async (rawToken: string) => {
+    const cleanToken = rawToken.trim();
+    if (!cleanToken) return;
 
     const token = localStorage.getItem("afr_token");
     try {
       const res = await axios.post(
         `${API_BASE_URL}/api/attendance/scan`,
         {
-          qrToken: decodedText,
+          qrToken: cleanToken,
           dayNumber: scanDay,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setScanResult({ type: "success", text: res.data.message, data: res.data });
+      setManualQrToken("");
     } catch (err: any) {
       setScanResult({
         type: "error",
@@ -545,6 +655,20 @@ export default function OrganizerPortal() {
       });
     }
   };
+
+  const handleManualCheckIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualQrToken.trim()) return;
+    setManualLoading(true);
+    await handleProcessCheckIn(manualQrToken);
+    setManualLoading(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopCameraScanner();
+    };
+  }, []);
 
   const fetchSubmissions = async (bId: string, token?: string) => {
     const authToken = token || localStorage.getItem("afr_token");
@@ -943,17 +1067,72 @@ export default function OrganizerPortal() {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <Button
-                  variant={scannerActive ? "outline" : "terracotta"}
-                  size="md"
-                  onClick={toggleScanner}
-                  className="w-full"
-                >
-                  {scannerActive ? "Stop Camera Scanner" : "Activate PWA Camera Scanner"}
-                </Button>
+                {/* Camera Selector (if multiple cameras detected) */}
+                {cameras.length > 1 && (
+                  <div>
+                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                      Select Camera Device:
+                    </label>
+                    <select
+                      value={selectedCameraId}
+                      onChange={(e) => handleCameraChange(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-afr-terracotta"
+                    >
+                      {cameras.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label || `Camera ${c.id.substring(0, 5)}...`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Camera Action Buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant={scannerActive ? "outline" : "terracotta"}
+                    size="md"
+                    onClick={toggleScanner}
+                    disabled={scannerLoading}
+                    className="w-full"
+                  >
+                    <Camera className="w-4 h-4 mr-1.5" />
+                    <span>{scannerLoading ? "Starting Camera..." : scannerActive ? "Stop Camera" : "Open Camera"}</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="md"
+                    onClick={() => qrFileInputRef.current?.click()}
+                    className="w-full text-xs"
+                  >
+                    <Upload className="w-4 h-4 mr-1.5 text-afr-terracotta" />
+                    <span>Upload QR Image</span>
+                  </Button>
+                  <input
+                    type="file"
+                    ref={qrFileInputRef}
+                    accept="image/*"
+                    onChange={handleFileUploadScan}
+                    className="hidden"
+                  />
+                </div>
 
                 {/* Camera Scanner Viewport */}
-                <div id="qr-reader" className={`w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 ${!scannerActive ? "hidden" : ""}`} />
+                <div
+                  id="qr-reader"
+                  className={`w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 min-h-[200px] ${!scannerActive ? "hidden" : ""
+                    }`}
+                />
+                <div id="qr-reader-hidden" className="hidden" />
+
+                {/* Scanner Error Alert */}
+                {scannerError && (
+                  <div className="p-3 rounded-xl text-xs bg-red-500/10 border border-red-500/30 text-red-300 flex items-start space-x-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />
+                    <span>{scannerError}</span>
+                  </div>
+                )}
 
                 {/* Scan Result Feedback */}
                 {scanResult && (
@@ -973,11 +1152,36 @@ export default function OrganizerPortal() {
                     </div>
                     {scanResult.data && (
                       <p className="text-[11px] font-mono text-slate-400">
-                        Developer: {scanResult.data.developer?.name} &bull; Check-in Day {scanResult.data.dayNumber}
+                        Developer: {scanResult.data.developer?.name} ({scanResult.data.developer?.email}) &bull; Checked in for Day {scanResult.data.dayNumber}
                       </p>
                     )}
                   </div>
                 )}
+
+                {/* Manual Check-in Fallback */}
+                <div className="pt-3 border-t border-slate-800/80">
+                  <div className="text-[11px] font-mono text-slate-400 mb-2">
+                    Manual Token / Badge Check-In:
+                  </div>
+                  <form onSubmit={handleManualCheckIn} className="flex space-x-2">
+                    <Input
+                      type="text"
+                      placeholder="Paste QR Token (e.g. AFR-DEV-...)"
+                      value={manualQrToken}
+                      onChange={(e) => setManualQrToken(e.target.value)}
+                      className="text-xs py-1.5 h-9 font-mono"
+                    />
+                    <Button
+                      type="submit"
+                      variant="amber"
+                      size="sm"
+                      disabled={manualLoading || !manualQrToken.trim()}
+                      className="whitespace-nowrap px-3 h-9 text-xs"
+                    >
+                      {manualLoading ? "..." : "Check In"}
+                    </Button>
+                  </form>
+                </div>
               </CardContent>
             </Card>
           </div>
