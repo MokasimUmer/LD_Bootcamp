@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function DeveloperPortal() {
   const router = useRouter();
@@ -79,7 +80,7 @@ export default function DeveloperPortal() {
 
   const fetchRegistrations = async (token: string) => {
     try {
-      const res = await axios.get("http://localhost:4000/api/registrations/my-registrations", {
+      const res = await axios.get(`${API_BASE_URL}/api/registrations/my-registrations`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRegistrations(res.data);
@@ -92,7 +93,7 @@ export default function DeveloperPortal() {
 
   const fetchMyPayouts = async (token: string) => {
     try {
-      const res = await axios.get("http://localhost:4000/api/payouts/my-payouts", {
+      const res = await axios.get(`${API_BASE_URL}/api/payouts/my-payouts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPayouts(res.data);
@@ -101,7 +102,7 @@ export default function DeveloperPortal() {
 
   const fetchLeaderboard = async (bootcampId: string, dayNum: number) => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/quiz/leaderboard/${bootcampId}/day/${dayNum}`);
+      const res = await axios.get(`${API_BASE_URL}/api/quiz/leaderboard/${bootcampId}/day/${dayNum}`);
       setLeaderboard(res.data || []);
     } catch (e) { }
   };
@@ -111,7 +112,7 @@ export default function DeveloperPortal() {
     setSelectedAnswers({});
     const authToken = token || localStorage.getItem("afr_token");
     try {
-      const res = await axios.get(`http://localhost:4000/api/quiz/bootcamp/${bootcampId}/day/${dayNum}`, {
+      const res = await axios.get(`${API_BASE_URL}/api/quiz/bootcamp/${bootcampId}/day/${dayNum}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setQuizData(res.data);
@@ -161,7 +162,7 @@ export default function DeveloperPortal() {
 
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/quiz/submit",
+        `${API_BASE_URL}/api/quiz/submit`,
         {
           bootcampId: activeReg.bootcampId,
           dayNumber: activeDay,
@@ -186,7 +187,7 @@ export default function DeveloperPortal() {
 
     try {
       await axios.post(
-        "http://localhost:4000/api/submissions",
+        `${API_BASE_URL}/api/submissions`,
         {
           bootcampId: activeReg.bootcampId,
           githubUrl,
@@ -206,7 +207,7 @@ export default function DeveloperPortal() {
     const token = localStorage.getItem("afr_token");
     try {
       await axios.put(
-        "http://localhost:4000/api/auth/lightning-address",
+        `${API_BASE_URL}/api/auth/lightning-address`,
         { lightningAddress: lnAddress },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -230,7 +231,7 @@ export default function DeveloperPortal() {
 
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/payouts/claim-winner",
+        `${API_BASE_URL}/api/payouts/claim-winner`,
         {
           bootcampId: activeReg.bootcampId,
           dayNumber: activeDay,

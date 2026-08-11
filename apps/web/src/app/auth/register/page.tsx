@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:4000/api/auth/register", {
+      const res = await axios.post(`${API_BASE_URL}/api/auth/register`, {
         name,
         email,
         password,

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/api";
 const AFRICAN_COUNTRIES_FALLBACK = [
   { id: "dz", name: "Algeria", code: "DZ", cities: [{ id: "dz-1", name: "Algiers" }, { id: "dz-2", name: "Oran" }, { id: "dz-3", name: "Constantine" }, { id: "dz-4", name: "Annaba" }, { id: "dz-5", name: "Blida" }] },
   { id: "ao", name: "Angola", code: "AO", cities: [{ id: "ao-1", name: "Luanda" }, { id: "ao-2", name: "Huambo" }, { id: "ao-3", name: "Lobito" }, { id: "ao-4", name: "Benguela" }, { id: "ao-5", name: "Cabinda" }] },
@@ -170,7 +171,7 @@ export default function OrganizerPortal() {
   const fetchBootcampPayouts = async (bootcampId: string, token?: string) => {
     const authToken = token || localStorage.getItem("afr_token");
     try {
-      const res = await axios.get(`http://localhost:4000/api/payouts/bootcamp/${bootcampId}`, {
+      const res = await axios.get(`${API_BASE_URL}/api/payouts/bootcamp/${bootcampId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setOrganizerPayouts(res.data || []);
@@ -182,7 +183,7 @@ export default function OrganizerPortal() {
     setSettleLoading((prev) => ({ ...prev, [payout.id]: true }));
     try {
       await axios.post(
-        "http://localhost:4000/api/payouts/process",
+        `${API_BASE_URL}/api/payouts/process`,
         {
           developerId: payout.developerId,
           bootcampId: payout.bootcampId,
@@ -226,7 +227,7 @@ export default function OrganizerPortal() {
   const fetchBootcamps = async (token?: string) => {
     const authToken = token || localStorage.getItem("afr_token");
     try {
-      const res = await axios.get("http://localhost:4000/api/bootcamps");
+      const res = await axios.get(`${API_BASE_URL}/api/bootcamps`);
       setBootcamps(res.data);
       if (res.data.length > 0) {
         const initialId = selectedBootcampId || res.data[0].id;
@@ -259,7 +260,7 @@ export default function OrganizerPortal() {
 
   const fetchCountries = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/api/locations/countries");
+      const res = await axios.get(`${API_BASE_URL}/api/locations/countries`);
       const list = (res.data && res.data.length > 0) ? res.data : AFRICAN_COUNTRIES_FALLBACK;
       setCountries(list);
       if (list.length > 0) {
@@ -290,7 +291,7 @@ export default function OrganizerPortal() {
     }
 
     try {
-      const res = await axios.get(`http://localhost:4000/api/locations/countries/${cId}/cities`);
+      const res = await axios.get(`${API_BASE_URL}/api/locations/countries/${cId}/cities`);
       if (res.data && res.data.length > 0) {
         setCities(res.data);
         setCreateCityId(res.data[0].id);
@@ -313,7 +314,7 @@ export default function OrganizerPortal() {
 
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/bootcamps",
+        `${API_BASE_URL}/api/bootcamps`,
         {
           title: title ? title : "AFR Lightning Bootcamp",
           description: description ? description : "5-day intensive Lightning Network developer bootcamp",
@@ -338,7 +339,7 @@ export default function OrganizerPortal() {
         alert("Server error: " + (detailedError || JSON.stringify(err.response.data)));
       } else if (err.request) {
         // Request was made but no response received (network error)
-        alert("Network error: Could not reach the backend server at localhost:4000. Please make sure it is running.");
+        alert(`Network error: Could not reach the backend server at ${API_BASE_URL}. Please make sure it is running.`);
       } else {
         alert("Error: " + err.message);
       }
@@ -351,7 +352,7 @@ export default function OrganizerPortal() {
     const token = localStorage.getItem("afr_token");
     try {
       await axios.put(
-        `http://localhost:4000/api/bootcamps/${selectedBootcampId}`,
+        `${API_BASE_URL}/api/bootcamps/${selectedBootcampId}`,
         {
           title: editTitle,
           description: editDescription,
@@ -399,7 +400,7 @@ export default function OrganizerPortal() {
 
     try {
       await axios.put(
-        `http://localhost:4000/api/bootcamps/${selectedBootcampId}/curriculum/day/${currDay}`,
+        `${API_BASE_URL}/api/bootcamps/${selectedBootcampId}/curriculum/day/${currDay}`,
         {
           title: currTitle,
           contentMarkdown: currContent,
@@ -429,7 +430,7 @@ export default function OrganizerPortal() {
     const limit = customTimeLimitMinutes || selectedQuizTimeLimits[dayNum] || 10;
     try {
       await axios.put(
-        `http://localhost:4000/api/bootcamps/${selectedBootcampId}/quiz/unlock`,
+        `${API_BASE_URL}/api/bootcamps/${selectedBootcampId}/quiz/unlock`,
         {
           dayNumber: dayNum,
           unlocked: unlockState,
@@ -449,7 +450,7 @@ export default function OrganizerPortal() {
       socketRef.current.disconnect();
     }
 
-    const socket = io("http://localhost:4000");
+    const socket = io(API_BASE_URL);
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -467,7 +468,7 @@ export default function OrganizerPortal() {
 
   const fetchLeaderboardRest = async (bId: string, dayNum: number) => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/quiz/leaderboard/${bId}/day/${dayNum}`);
+      const res = await axios.get(`${API_BASE_URL}/api/quiz/leaderboard/${bId}/day/${dayNum}`);
       setLeaderboard(res.data);
     } catch (e) { }
   };
@@ -529,7 +530,7 @@ export default function OrganizerPortal() {
     const token = localStorage.getItem("afr_token");
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/attendance/scan",
+        `${API_BASE_URL}/api/attendance/scan`,
         {
           qrToken: decodedText,
           dayNumber: scanDay,
@@ -548,7 +549,7 @@ export default function OrganizerPortal() {
   const fetchSubmissions = async (bId: string, token?: string) => {
     const authToken = token || localStorage.getItem("afr_token");
     try {
-      const res = await axios.get(`http://localhost:4000/api/submissions/bootcamp/${bId}`, {
+      const res = await axios.get(`${API_BASE_URL}/api/submissions/bootcamp/${bId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setSubmissions(res.data);
@@ -559,7 +560,7 @@ export default function OrganizerPortal() {
     const token = localStorage.getItem("afr_token");
     try {
       await axios.put(
-        `http://localhost:4000/api/submissions/${subId}/review`,
+        `${API_BASE_URL}/api/submissions/${subId}/review`,
         { rating, reviewComment: comment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -573,7 +574,7 @@ export default function OrganizerPortal() {
 
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/payouts/process",
+        `${API_BASE_URL}/api/payouts/process`,
         {
           developerId: sub.developerId,
           bootcampId: sub.bootcampId,

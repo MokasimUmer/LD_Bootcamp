@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:4000/api/auth/login", {
+      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         email: email.trim().toLowerCase(),
         password: password.trim(),
       });

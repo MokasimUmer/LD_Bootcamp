@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/api";
 
 const AFRICAN_COUNTRIES_FALLBACK = [
   { id: "dz", name: "Algeria", code: "DZ", cities: [{ id: "dz-1", name: "Algiers" }, { id: "dz-2", name: "Oran" }, { id: "dz-3", name: "Constantine" }, { id: "dz-4", name: "Annaba" }, { id: "dz-5", name: "Blida" }] },
@@ -92,7 +93,7 @@ export default function HomePage() {
 
   const fetchCountries = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/api/locations/countries");
+      const res = await axios.get(`${API_BASE_URL}/api/locations/countries`);
       if (res.data && res.data.length > 0) {
         setCountries(res.data);
       } else {
@@ -120,7 +121,7 @@ export default function HomePage() {
     }
 
     try {
-      const res = await axios.get(`http://localhost:4000/api/locations/countries/${countryId}/cities`);
+      const res = await axios.get(`${API_BASE_URL}/api/locations/countries/${countryId}/cities`);
       if (res.data && res.data.length > 0) {
         setCities(res.data);
       }
@@ -136,7 +137,7 @@ export default function HomePage() {
   const fetchBootcamps = async (cityId?: string, countryId?: string) => {
     setLoading(true);
     try {
-      let url = "http://localhost:4000/api/bootcamps";
+      let url = `${API_BASE_URL}/api/bootcamps`;
       const params = new URLSearchParams();
       if (cityId) params.append("cityId", cityId);
       if (countryId) params.append("countryId", countryId);
@@ -161,7 +162,7 @@ export default function HomePage() {
 
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/registrations",
+        `${API_BASE_URL}/api/registrations`,
         { bootcampId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
